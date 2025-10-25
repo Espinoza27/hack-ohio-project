@@ -1,11 +1,10 @@
-// Import the functions you need from the SDKs you need
+// src/firebase.js
 import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
+// Import the database services you need
+import { getFirestore } from "firebase/firestore";
+import { getDatabase } from "firebase/database";
 
 // Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
   apiKey: "AIzaSyCP4urGnBlApowsuSdiMNY7O2u_xxHS09s",
   authDomain: "openfocus-e0d24.firebaseapp.com",
@@ -19,4 +18,7 @@ const firebaseConfig = {
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
+
+// Initialize and export the services
+export const db = getFirestore(app); // Firestore for session list
+export const rtDB = getDatabase(app); // Realtime Database for chat
