@@ -61,15 +61,14 @@ input {
   box-sizing: border-box; /* Ensures padding doesn't break layout */
 }
 
-/* --- Session Form Styling --- */
+/* --- Session Form Styling (old one, not used but fine to keep) --- */
 .session-form {
   display: flex;
   margin-bottom: 25px;
   gap: 10px;
 }
-
 .session-form input {
-  flex-grow: 1; /* Makes the input box fill the space */
+  flex-grow: 1;
   padding: 12px;
   font-size: 1rem;
   border: 1px solid #444;
@@ -77,59 +76,29 @@ input {
   color: #fff;
   border-radius: 6px; 
 }
-
 .session-form button {
   padding: 0 20px;
   font-size: 1rem;
   border: none;
-  background-color: #007aff; /* Blue create button */
+  background-color: #007aff;
   color: white;
   cursor: pointer;
   border-radius: 6px;
   transition: background-color 0.2s;
 }
-
 .session-form button:hover {
   background-color: #0056b3;
 }
 
 
-/* --- Session Item Styling --- */
+/* --- Session Item Styling (old one) --- */
 .session-items {
   display: flex;
   flex-direction: column;
   gap: 15px; /* Space between each session item */
 }
-
 .session-item {
-  display: flex;
-  justify-content: space-between; /* Pushes topic & button apart */
-  align-items: center;
-  background-color: #282828;
-  padding: 20px;
-  border-radius: 12px;
-  border: 1px solid #444;
-  transition: all 0.2s ease;
-}
-
-.session-item:hover {
-  border-color: #646cff;
-  transform: translateY(-2px); /* Lifts the card slightly */
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-}
-
-.join-button {
-  background-color: #34c759; /* Green join button */
-  color: white;
-  text-decoration: none;
-  padding: 8px 16px;
-  border-radius: 5px;
-  font-weight: 500;
-  transition: background-color 0.2s;
-}
-
-.join-button:hover {
-  background-color: #28a745;
+  display: none; /* Hide the old style */
 }
 
 /* --- Session Page (Chat Page) Styling --- */
@@ -150,17 +119,24 @@ input {
 }
 
 .chat-message {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
   margin-bottom: 10px;
 }
-
+.chat-sender {
+  font-size: 0.8rem;
+  color: #aaa;
+  margin-bottom: 2px;
+}
 .chat-message p {
   margin: 0;
+  margin-top: 0; /* Cleaned up duplicate */
   padding: 8px 12px;
   background-color: #333;
   border-radius: 10px;
   display: inline-block;
 }
-
 .chat-message small {
   color: #999;
   margin-left: 10px;
@@ -171,11 +147,9 @@ input {
   display: flex;
   gap: 10px;
 }
-
 .chat-form input {
   flex-grow: 1;
 }
-
 .chat-form button {
   background-color: #007aff;
   color: white;
@@ -200,20 +174,21 @@ input {
 }
 
 .modal-content {
-  background: #282828;
+  background: #2d2d2d; /* Use the visually pleasing style */
   padding: 30px;
   border-radius: 12px;
-  border: 1px solid #444;
+  border: 1px solid #555; /* Use the visually pleasing style */
   width: 90%;
   max-width: 600px;
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
   z-index: 1001;
 }
-
 .modal-content h2 {
   margin-top: 0;
   border-bottom: 1px solid #555;
   padding-bottom: 15px;
+  color: #fff; /* Use the visually pleasing style */
+  font-weight: 600; /* Use the visually pleasing style */
 }
 
 .modal-actions {
@@ -221,6 +196,12 @@ input {
   justify-content: flex-end;
   gap: 15px;
   margin-top: 25px;
+}
+.modal-actions.full-width {
+  grid-column: 1 / -1;
+  border-top: 1px solid #444;
+  padding-top: 20px;
+  margin-top: 10px;
 }
 
 .button-secondary {
@@ -267,7 +248,7 @@ input {
 }
 .sign-out-button:hover {
   background-color: #c9302c;
-  border-color: #ac2925;
+  border-color: #ac2525;
 }
 
 /* --- New Condensed Session Item --- */
@@ -281,17 +262,14 @@ input {
   border: 1px solid #444;
   transition: all 0.2s ease;
 }
-
 .session-item-condensed:hover {
   border-color: #646cff;
   transform: translateY(-2px);
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
 }
-
 .session-item-condensed h3 {
   margin: 0 0 5px 0;
 }
-
 .session-item-condensed p {
   margin: 0;
   color: #aaa;
@@ -302,7 +280,67 @@ input {
   margin-top: 5px;
 }
 
-/* Fix old session item styles */
-.session-item {
-  display: none; /* Hide the old style */
+/* --- New Detailed Form (for the modal) --- */
+.session-form-detailed {
+  display: grid;
+  grid-template-columns: 1fr 1fr; /* 2-column grid */
+  gap: 15px 20px; /* Row and column gap */
+}
+
+/* Form group styling for the grid */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.form-group.full-width {
+  grid-column: 1 / -1; /* Make this element span both columns */
+}
+.form-group.half-width {
+  grid-column: auto; /* Default to one column */
+}
+
+.session-form-detailed label {
+  font-weight: 500;
+  font-size: 0.9rem;
+  color: #ccc;
+}
+.session-form-detailed input,
+.session-form-detailed textarea,
+.session-form-detailed select {
+  width: 100%;
+  padding: 12px;
+  font-size: 1rem;
+  border: 1px solid #444;
+  background-color: #222;
+  color: #fff;
+  border-radius: 6px;
+  box-sizing: border-box; /* Important for padding */
+}
+.session-form-detailed textarea {
+  min-height: 80px;
+}
+
+/* New End Session Button */
+.end-session-button {
+  float: right;
+  background-color: #d9534f;
+  color: white;
+  border: none;
+}
+.end-session-button:hover {
+  background-color: #c9302c;
+}
+
+.join-button {
+  background-color: #34c759; /* Green join button */
+  color: white;
+  text-decoration: none;
+  padding: 8px 16px;
+  border-radius: 5px;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+.join-button:hover {
+  background-color: #28a745;
 }

@@ -1,6 +1,6 @@
 // src/CreateSessionModal.jsx
 import React, { useState } from 'react';
-import { db } from './firebase';
+import { db, auth } from './firebase'; // <-- 1. Import auth
 import { collection, addDoc } from 'firebase/firestore';
 
 // Helper function to get the min/max times
@@ -10,9 +10,8 @@ const getMinMaxTimes = () => {
   threeDaysFromNow.setDate(now.getDate() + 3);
   threeDaysFromNow.setHours(23, 59, 59, 999); // Set to 11:59 PM
 
-  // Format for datetime-local input (YYYY-MM-DDTHH:MM)
   const toLocalISOString = (date) => {
-    const tzOffset = date.getTimezoneOffset() * 60000; // Offset in milliseconds
+    const tzOffset = date.getTimezoneOffset() * 60000;
     const localISOTime = new Date(date.getTime() - tzOffset).toISOString().slice(0, 16);
     return localISOTime;
   };
@@ -37,12 +36,17 @@ const CreateSessionModal = ({ onClose, onSessionCreated }) => {
     e.preventDefault();
     setError('');
 
+    // --- 2. Get the current user ---
+    const user = auth.currentUser;
+    if (!user) {
+      setError('You must be logged in to create a session.');
+      return;
+    }
+
     if (!topic || !startTime) {
       setError('Topic and Start Time are required.');
       return;
     }
-
-    // Double-check time validation (though the input props should handle it)
     const startTimeDate = new Date(startTime);
     const minDate = new Date(minTime);
     const maxDate = new Date(maxTime);
@@ -58,14 +62,14 @@ const CreateSessionModal = ({ onClose, onSessionCreated }) => {
         description: description,
         location: location,
         startTime: startTimeDate,
-        // Only add endTime if it was actually filled in
         endTime: endTime ? new Date(endTime) : null,
         createdAt: new Date(),
         status: 'active',
+        hostId: user.uid, // <-- 3. Add the host's ID
       });
       
-      onSessionCreated(); // This tells HomePage to refresh its list
-      onClose(); // This closes the modal
+      onSessionCreated();
+      onClose();
     } catch (err) {
       console.error("Error creating session: ", err);
       setError('Failed to create session. Please try again.');
@@ -76,54 +80,66 @@ const CreateSessionModal = ({ onClose, onSessionCreated }) => {
     <div className="modal-overlay">
       <div className="modal-content">
         <h2>Create New Study Session</h2>
+        
+        {/* --- 4. This is the new, styled form structure --- */}
         <form onSubmit={handleSubmit} className="session-form-detailed">
-          <label>Topic</label>
-          <input
-            type="text"
-            value={topic}
-            onChange={(e) => setTopic(e.target.value)}
-            placeholder="e.g., 'Chem 1210 Midterm'"
-            required
-          />
+          <div className="form-group full-width">
+            <label>Topic</label>
+            <input
+              type="text"
+              value={topic}
+              onChange={(e) => setTopic(e.target.value)}
+              placeholder="e.g., 'Chem 1210 Midterm'"
+              required
+            />
+          </div>
 
-          <label>Description</label>
-          <textarea
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder="e.g., 'Going over practice problems...'"
-            required
-          />
+          <div className="form-group full-width">
+            <label>Description</label>
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="e.g., 'Going over practice problems...'"
+              required
+            />
+          </div>
 
-          <label>Location</label>
-          <select value={location} onChange={(e) => setLocation(e.target.value)}>
-            <option value="Thompson Library">Thompson Library</option>
-            <option value="18th Ave Library">18th Ave Library</option>
-            <option value="Ohio Union">Ohio Union</option>
-            <option value="Baker Hall">Baker Hall</option>
-            <option value="Enarson Classroom Bldg">Enarson Classroom Bldg</option>
-          </select>
+          <div className="form-group full-width">
+            <label>Location</label>
+            <select value={location} onChange={(e) => setLocation(e.target.value)}>
+              <option value="Thompson Library">Thompson Library</option>
+              <option value="18th Ave Library">18th Ave Library</option>
+              <option value="Ohio Union">Ohio Union</option>
+              <option value="Baker Hall">Baker Hall</option>
+              <option value="Enarson Classroom Bldg">Enarson Classroom Bldg</option>
+            </select>
+          </div>
 
-          <label>Start Time</label>
-          <input
-            type="datetime-local"
-            value={startTime}
-            onChange={(e) => setStartTime(e.target.value)}
-            min={minTime} // <-- Time validation
-            max={maxTime} // <-- Time validation
-            required
-          />
+          <div className="form-group half-width">
+            <label>Start Time</label>
+            <input
+              type="datetime-local"
+              value={startTime}
+              onChange={(e) => setStartTime(e.target.value)}
+              min={minTime}
+              max={maxTime}
+              required
+            />
+          </div>
 
-          <label>End Time (Optional)</label>
-          <input
-            type="datetime-local"
-            value={endTime}
-            onChange={(e) => setEndTime(e.target.value)}
-            min={startTime || minTime} // End time can't be before start time
-          />
+          <div className="form-group half-width">
+            <label>End Time (Optional)</label>
+            <input
+              type="datetime-local"
+              value={endTime}
+              onChange={(e) => setEndTime(e.target.value)}
+              min={startTime || minTime}
+            />
+          </div>
 
-          {error && <p className="modal-error">{error}</p>}
+          {error && <p className="modal-error full-width">{error}</p>}
 
-          <div className="modal-actions">
+          <div className="modal-actions full-width">
             <button type="button" className="button-secondary" onClick={onClose}>
               Cancel
             </button>
@@ -136,5 +152,4 @@ const CreateSessionModal = ({ onClose, onSessionCreated }) => {
     </div>
   );
 };
-
 export default CreateSessionModal;
