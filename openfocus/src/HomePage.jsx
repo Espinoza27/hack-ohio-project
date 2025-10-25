@@ -81,6 +81,13 @@ const fetchSessions = async () => {
         <div className="session-list-container">
           <div className="home-header">
             <h2>Study Sessions</h2>
+            <button 
+      onClick={() => setIsEditModalOpen(true)} 
+      className="button-secondary" // Use this for a nice gray style
+      style={{marginRight: '10px'}}
+    >
+      Edit Profile
+    </button>
             <button onClick={handleSignOut} className="sign-out-button">
               Sign Out
             </button>
