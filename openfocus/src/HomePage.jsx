@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { db, auth } from './firebase'; 
 import { collection, getDocs } from 'firebase/firestore'; 
 import { signOut } from 'firebase/auth';
+import EditProfileModal from './EditProfileModal';
 
 import CreateSessionModal from './CreateSessionModal';
 import SessionDetailsModal from './SessionDetailsModal';
@@ -13,21 +14,15 @@ import campusMap from './assets/campusMap.png';
 const HomePage = () => {
   const [sessions, setSessions] = useState([]);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [selectedSession, setSelectedSession] = useState(null);
+  const [selectedSession, setSelectedSession] = useState(null); // For the details modal
 
-  const canvasRef = useRef(null);
-  const [fakeUsers] = useState([
-    { x: 270, y: 220, capacity: 100 }, // Thompson
-    { x: 330, y: 120, capacity: 90 },  // 18 Ave LB
-    { x: 500, y: 280, capacity: 90 },  // Union
-    { x: 200, y: 110, capacity: 70 },  // Enerson
-    { x: 170, y: 200, capacity: 60 },  // RPAC
-  ]);
+// Replace your old fetchSessions function with this
+const fetchSessions = async () => {
+  // Get the current time
+  const now = new Date(); 
 
-  // Fetch sessions from Firestore
-  const fetchSessions = async () => {
-    const now = new Date();
-    const querySnapshot = await getDocs(collection(db, 'sessions'));
+  // Get all sessions from the database
+  const querySnapshot = await getDocs(collection(db, 'sessions'));
 
     const sessionsList = querySnapshot.docs
       .map(doc => ({ id: doc.id, ...doc.data() }))
@@ -79,7 +74,9 @@ const HomePage = () => {
         <div className="session-list-container">
           <div className="home-header">
             <h2>Study Sessions</h2>
-            <button onClick={handleSignOut} className="sign-out-button">Sign Out</button>
+            <button onClick={handleSignOut} className="sign-out-button">
+              Sign Out
+            </button>
           </div>
 
          <button 
@@ -157,6 +154,16 @@ const HomePage = () => {
           onClose={() => setSelectedSession(null)}
         />
       )}
+      {/* --- ADD THIS --- */}
+      {isEditModalOpen && (
+        <EditProfileModal
+        onClose={() => setIsEditModalOpen(false)}
+        onProfileUpdated={() => {
+      // You could refresh data here if needed, but for now just close
+  }}
+  />
+  )}
+{/* --- END OF ADDITION --- */}
     </>
   );
 };

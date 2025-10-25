@@ -280,67 +280,83 @@ input {
   margin-top: 5px;
 }
 
-/* --- New Detailed Form (for the modal) --- */
-.session-form-detailed {
-  display: grid;
-  grid-template-columns: 1fr 1fr; /* 2-column grid */
-  gap: 15px 20px; /* Row and column gap */
+/* Fix old session item styles */
+.session-item {
+  display: none; /* Hide the old style */
 }
-
-/* Form group styling for the grid */
-.form-group {
+/* --- New Chat Message Styling --- */
+.chat-message-with-pic {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.chat-profile-pic {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-top: 2px;
+}
+.chat-message {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  align-items: flex-start;
 }
-.form-group.full-width {
-  grid-column: 1 / -1; /* Make this element span both columns */
+.chat-sender {
+  font-size: 0.8rem;
+  color: #aaa;
+  margin-bottom: 2px;
+  font-weight: 600;
 }
-.form-group.half-width {
-  grid-column: auto; /* Default to one column */
+.chat-message p {
+  margin-top: 0;
+}
+/* --- Add to bottom of App.css --- */
+
+/* Makes chat sender name clickable */
+.chat-sender.clickable {
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-color: #888;
+}
+.chat-sender.clickable:hover {
+  text-decoration-color: #fff;
 }
 
-.session-form-detailed label {
-  font-weight: 500;
-  font-size: 0.9rem;
+/* User Profile Modal Styles */
+.user-profile-modal .profile-details {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+.user-profile-modal .profile-details p {
+  margin: 0;
+  display: flex;
+  justify-content: space-between;
+}
+.user-profile-modal .profile-details p span {
   color: #ccc;
-}
-.session-form-detailed input,
-.session-form-detailed textarea,
-.session-form-detailed select {
-  width: 100%;
-  padding: 12px;
-  font-size: 1rem;
-  border: 1px solid #444;
-  background-color: #222;
-  color: #fff;
-  border-radius: 6px;
-  box-sizing: border-box; /* Important for padding */
-}
-.session-form-detailed textarea {
-  min-height: 80px;
-}
-
-/* New End Session Button */
-.end-session-button {
-  float: right;
-  background-color: #d9534f;
-  color: white;
-  border: none;
-}
-.end-session-button:hover {
-  background-color: #c9302c;
-}
-
-.join-button {
-  background-color: #34c759; /* Green join button */
-  color: white;
-  text-decoration: none;
-  padding: 8px 16px;
-  border-radius: 5px;
   font-weight: 500;
-  transition: background-color 0.2s;
+  text-align: right;
 }
-.join-button:hover {
-  background-color: #28a745;
+.user-profile-modal .profile-courses-list {
+  margin: 0;
+  padding-left: 20px;
+}
+.user-profile-modal .profile-courses-list li {
+  color: #ccc;
+  margin-bottom: 5px;
+}
+
+/* --- Add to bottom of App.css --- */
+
+/* Profile Pic Preview in Edit Modal */
+.profile-pic-preview {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid #555;
+  margin-bottom: 10px;
 }
