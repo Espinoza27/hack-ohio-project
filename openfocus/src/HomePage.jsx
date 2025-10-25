@@ -1,14 +1,13 @@
 // src/HomePage.jsx
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { db } from './firebase'; // <-- Import your Firebase config
-import { collection, addDoc, getDocs } from 'firebase/firestore'; // <-- Import Firestore functions
+import { db } from './firebase'; 
+import { collection, addDoc, getDocs } from 'firebase/firestore'; 
 
 const HomePage = () => {
-  const [sessions, setSessions] = useState([]); // Holds the list of sessions
-  const [newSessionTopic, setNewSessionTopic] = useState(''); // Holds text from the input box
+  const [sessions, setSessions] = useState([]); 
+  const [newSessionTopic, setNewSessionTopic] = useState(''); 
 
-  // This function runs when the component first loads
   const fetchSessions = async () => {
     const querySnapshot = await getDocs(collection(db, 'sessions'));
     const sessionsList = querySnapshot.docs.map(doc => ({
@@ -18,57 +17,64 @@ const HomePage = () => {
     setSessions(sessionsList);
   };
 
-  // This hook makes fetchSessions() run once
   useEffect(() => {
     fetchSessions();
   }, []);
 
-  // This function runs when you click the "Create" button
   const handleCreateSession = async (e) => {
-    e.preventDefault(); // Prevents the page from reloading
-    if (newSessionTopic.trim() === '') return; // Don't create empty sessions
+    e.preventDefault(); 
+    if (newSessionTopic.trim() === '') return; 
 
     try {
-      // Add a new document to the "sessions" collection in Firestore
       const docRef = await addDoc(collection(db, 'sessions'), {
         topic: newSessionTopic,
         createdAt: new Date()
       });
       
       console.log("Document written with ID: ", docRef.id);
-      setNewSessionTopic(''); // Clear the input box
-      fetchSessions(); // Refresh the list of sessions
+      setNewSessionTopic(''); 
+      fetchSessions(); 
     } catch (e) {
       console.error("Error adding document: ", e);
     }
   };
 
   return (
-    <div>
-      <h2>Study Sessions</h2>
+    // This is the new 2-column layout container
+    <div className="home-layout">
+      
+      {/* --- Column 1: Session List --- */}
+      <div className="session-list-container">
+        <h2>Study Sessions</h2>
 
-      {/* --- Form to Create New Session --- */}
-      <form onSubmit={handleCreateSession}>
-        <input
-          type="text"
-          value={newSessionTopic}
-          onChange={(e) => setNewSessionTopic(e.target.value)}
-          placeholder="New session topic (e.g., 'Chem 1210 Midterm')"
-        />
-        <button type="submit">Create Session</button>
-      </form>
+        <form onSubmit={handleCreateSession} className="session-form">
+          <input
+            type="text"
+            value={newSessionTopic}
+            onChange={(e) => setNewSessionTopic(e.target.value)}
+            placeholder="New session topic (e.g., 'Chem 1210 Midterm')"
+          />
+          <button type="submit">Create</button>
+        </form>
 
-      <hr />
-
-      {/* --- List of Existing Sessions --- */}
-      {sessions.map(session => (
-        <div key={session.id} style={{ margin: '10px 0' }}>
-          <h3>{session.topic}</h3>
-          <Link to={`/session/${session.id}`}>
-            Join Session
-          </Link>
+        <div className="session-items">
+          {sessions.map(session => (
+            <div key={session.id} className="session-item">
+              <h3>{session.topic}</h3>
+              <Link to={`/session/${session.id}`} className="join-button">
+                Join
+              </Link>
+            </div>
+          ))}
         </div>
-      ))}
+      </div>
+
+      {/* --- Column 2: Map Placeholder --- */}
+      <div className="map-placeholder">
+        <h3>Campus Map</h3>
+        <p>Your interactive map will go here.</p>
+      </div>
+
     </div>
   );
 };

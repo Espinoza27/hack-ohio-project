@@ -51,7 +51,7 @@ const SessionPage = () => {
   };
 
   return (
-    <div>
+    <div className="session-container">
       <h2>Study Session: {sessionId}</h2>
       
       {/* --- Chat Messages Display --- */}
