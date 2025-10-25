@@ -82,13 +82,23 @@ const HomePage = () => {
             <button onClick={handleSignOut} className="sign-out-button">Sign Out</button>
           </div>
 
-          <button 
-            className="create-button-full" 
-            style={{ width: '100%', marginBottom: '25px' }}
-            onClick={() => setIsCreateModalOpen(true)}
-          >
-            + Create New Session
-          </button>
+         <button 
+  className="create-button-full" 
+  style={{ 
+    width: '100%', 
+    marginBottom: '25px', 
+    backgroundColor: '#28a745', // green
+    color: 'white',             // text color
+    border: 'none',
+    padding: '10px',
+    fontSize: '16px',
+    cursor: 'pointer',
+    borderRadius: '5px'
+  }}
+  onClick={() => setIsCreateModalOpen(true)}
+>
+  + Create New Session
+</button>
 
           <div className="session-items">
             {sessions.map(session => (
