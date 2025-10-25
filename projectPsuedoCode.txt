@@ -1,0 +1,20 @@
+Create digital map of floor of some building
+
+Possible extension: Get locations of user's by our project being an extension of OSU app and use
+the already created annonomuys location tracking instead of having to 
+create a whole new infrastructure
+
+Make app that askes for location
+
+can make private or public study sessions with room number and subject being studied
+dependent on building
+
+each public and private study session can have a communcation room or chat room
+
+PROFILE
+name, major, classes currently taking stored by class number
+
+APP HOME SCREEN
+map
+
+
