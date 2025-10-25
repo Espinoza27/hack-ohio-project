@@ -33,16 +33,3 @@ class Profile {
   }
 }
 
-// Example usage:
-const userProfile = new Profile('Skyler Williams', 'Computer Engineering', ['ECE 2060', 'MATH 2410']);
-userProfile.addClass('ENG 1020');       // Add new class
-userProfile.removeClass('MATH 2410');   // Remove a class
-console.log(userProfile.getProfileInfo());
-
-/* Output:
-{
-  name: "Skyler Williams",
-  major: "Computer Engineering",
-  classes: ["ECE 2060", "ENG 1020"]
-}
-*/
