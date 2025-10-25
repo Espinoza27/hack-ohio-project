@@ -19,31 +19,24 @@ git branch --show-current
 
 Here are the commands you'll need for working with your `main` and `development` branches.
 
-### 1\. Initial Setup
+
 
 
 2.  **Switch to the beta branch
     git switch beta
 
-    *Now you are on the `development` branch, ready to work.*
-
 -----
 
-### 2\. Daily Development Work
+### 2\. Daily beta Work
 
-You should spend most of your time on the `development` branch.
+You should spend most of your time on the `beta` branch.
 
-1.  **Make Changes:** Modify files, add new features, etc.
-2.  **Stage and Commit:**
-    ```bash
+# Modify files, add new features, etc.
     git add ./
     git commit -m "Implement new feature X"
-    ```
+
 3.  **Push to GitHub:**
-    The first time you push this new branch, you'll need to use the `-u` (or `--set-upstream`) flag to link your local branch to a remote branch on GitHub.
-    ```bash
-    git push -u origin beta
-    # For subsequent pushes:
+  
     # git push
     ```
 
@@ -52,7 +45,7 @@ You should spend most of your time on the `development` branch.
 # Change back to main branch
     git switch main
     
-# Merge `development` into `main`:
+# Merge `beta` into `main`:
    
     git merge beta
     
@@ -62,11 +55,11 @@ You should spend most of your time on the `development` branch.
 -----
 
 
-# Switch back to `development`:
+# Switch back to `beta`:
 
-    git switch development
+    git switch beta
 
-# Merge `main` into `development`:**
+# Merge `main` into `beta`:**
     
     git merge main
     
