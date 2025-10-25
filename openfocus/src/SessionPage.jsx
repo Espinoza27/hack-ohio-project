@@ -2,6 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { rtDB } from './firebase'; // <-- Import Realtime Database
 import { ref, onValue, push, serverTimestamp } from 'firebase/database'; // <-- Import chat functions
+import { userProfile } from "./Profile.js"; // Adjust path if needed
+
+const defaultPic = 'https://i.pinimg.com/originals/73/83/4b/73834b0cfd3f4cf3f893ececab22a258.jpg';
+
 
 const SessionPage = () => {
   const { sessionId } = useParams(); // Get session ID from URL
@@ -49,8 +53,11 @@ const SessionPage = () => {
     setNewMessage(''); // Clear the input box
   };
 
-  // Session Page begins here
-  // This is the page you get taken to when you click join
+
+
+  
+  //Session Page begins here
+  //This is the page you get taken to when you click join
   return (
     <div className="session-container">
       <h2>Study Session: {sessionId}</h2>
@@ -60,14 +67,15 @@ const SessionPage = () => {
         {messages.map(msg => (
           <div key={msg.id} className="chat-message">
             <p>
-              {msg.text}
-              <small style={{ marginLeft: 8 }}>
-                {msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString() : ''}
+              {msg.text} 
+              <small>
+                {new Date(msg.timestamp).toLocaleTimeString()}
               </small>
             </p>
           </div>
         ))}
       </div>
+
 
       {/* Send Message */}
       <form onSubmit={handleSendMessage} style={{ display: 'flex', gap: '10px', marginTop: '15px' }}>
@@ -85,26 +93,9 @@ const SessionPage = () => {
           Send
         </button>
       </form>
-
-      {/* --- Back to Home Button --- */}
-      <div style={{ marginTop: '20px', textAlign: 'center' }}>
-        <button
-          onClick={() => navigate('/')}
-          style={{
-            padding: '8px 16px',
-            fontSize: '14px',
-            backgroundColor: '#f0f0f0',
-            border: '1px solid #ccc',
-            borderRadius: '4px',
-            cursor: 'pointer'
-          }}
-        >
-          ← Back to Home
-        </button>
-      </div>
-
     </div>
   );
 };
+
 
 export default SessionPage;
