@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Profile Test</title>
+</head>
+<body>
+  <h1>Profile.js Test</h1>
+  <p>Open the browser console to see the profile output.</p>
+
+  <script src="profile.js"></script>
+  <script>
+    // Create a test profile
+    const userProfile = new Profile('Skyler Williams', 'Computer Engineering', ['ECE 2060', 'MATH 2410']);
+
+    // Add and remove classes to test
+    userProfile.addClass('ENG 1020');
+    userProfile.removeClass('MATH 2410');
+
+    // Print the profile info
+    console.log(userProfile.getProfileInfo());
+  </script>
+</body>
+</html>
+
+Add index.html to test profile.js
