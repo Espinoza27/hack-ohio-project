@@ -1,40 +1,128 @@
 <!DOCTYPE html>
 <html>
-
 <head>
-  <title>User Profile</title>
+  <title>Editable User Profile</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+
+    #profile-container {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    #profile-pic {
+      width: 150px;
+      height: 150px;
+      object-fit: cover;
+      border-radius: 50%;
+      border: 2px solid #333;
+      cursor: pointer;
+    }
+
+    #profile-info {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    #profile-info div {
+      font-size: 18px;
+    }
+
+    #profile-info span {
+      font-weight: bold;
+      margin-right: 5px;
+    }
+
+    /* Style editable fields */
+    .editable {
+      display: inline-block;
+      padding: 2px 4px;
+      border-bottom: 1px dotted #333;
+      min-width: 50px;
+      cursor: text;
+    }
+
+    .editable:focus {
+      outline: none;
+      border-bottom: 2px solid #333;
+    }
+  </style>
 </head>
-
 <body>
-  <h1>Skylers Profile</h1>
-  <p>All info for this user is here</p>
 
-    <div id="profile-display"></div>
+  <h2>User Profile</h2>
 
+  <!-- Hidden file input for uploading picture -->
+  <input type="file" id="profile-input" accept="image/*" style="display:none;">
 
-  <!-- Points to the javascript code-->
+  <div id="profile-container">
+    <img id="profile-pic" src="https://static.vecteezy.com/system/resources/previews/036/280/650/non_2x/default-avatar-profile-icon-social-media-user-image-gray-avatar-icon-blank-profile-silhouette-illustration-vector.jpg" alt="Profile Picture">
+    <div id="profile-info">
+      <div>
+        <span>Name:</span>
+        <span id="name-edit" class="editable" contenteditable="true">Skyler Williams</span>
+      </div>
+      <div>
+        <span>Major:</span>
+        <span id="major-edit" class="editable" contenteditable="true">Computer Engineering</span>
+      </div>
+      <div>
+        <span>Classes:</span>
+        <span id="classes-edit" class="editable" contenteditable="true">ECE 2060, ENG 1020</span>
+      </div>
+    </div>
+  </div>
+
   <script src="profile.js"></script>
-
   <script>
-    // Create a test profile
-    const userProfile = new Profile('Skyler Williams', 'Computer Engineering', ['ECE 2060', 'MATH 2410']);
+    // Initialize Profile object
+    const userProfile = new Profile(
+      'Skyler Williams',
+      'Computer Engineering',
+      ['ECE 2060', 'ENG 1020'],
+      'https://static.vecteezy.com/system/resources/previews/036/280/650/non_2x/default-avatar-profile-icon-social-media-user-image-gray-avatar-icon-blank-profile-silhouette-illustration-vector.jpg'
+    );
 
-    // Add and remove classes to test
-    userProfile.addClass('ENG 1020');
-    userProfile.removeClass('MATH 2410');
+    const img = document.getElementById('profile-pic');
+    const fileInput = document.getElementById('profile-input');
+    const nameEdit = document.getElementById('name-edit');
+    const majorEdit = document.getElementById('major-edit');
+    const classesEdit = document.getElementById('classes-edit');
 
-    // Print the profile info
-    console.log(userProfile.getProfileInfo());
+    // Click on profile picture opens file picker
+    img.addEventListener('click', () => {
+      fileInput.click();
+    });
 
-    const profileDiv = document.getElementById('profile-display');
-profileDiv.innerHTML = `
-  <h2>${userProfile.name}</h2>
-  <p>Major: ${userProfile.major}</p>
-  <p>Classes: ${userProfile.classes.join(', ')}</p>
-`;
+    fileInput.addEventListener('change', () => {
+      const file = fileInput.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          userProfile.picture = e.target.result;
+          img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    // Update Profile object as user edits
+    nameEdit.addEventListener('input', () => {
+      userProfile.name = nameEdit.textContent;
+    });
+
+    majorEdit.addEventListener('input', () => {
+      userProfile.major = majorEdit.textContent;
+    });
+
+    classesEdit.addEventListener('input', () => {
+      userProfile.classes = classesEdit.textContent.split(',').map(c => c.trim()).filter(c => c);
+    });
   </script>
-
-
 </body>
-
 </html>
