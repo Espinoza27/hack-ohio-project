@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { db, auth } from './firebase'; 
 import { collection, getDocs, query, where, Timestamp } from 'firebase/firestore'; 
 import { signOut } from 'firebase/auth';
+import EditProfileModal from './EditProfileModal';
 
 // Import your new modal components
 import CreateSessionModal from './CreateSessionModal';
@@ -12,6 +13,7 @@ const HomePage = () => {
   const [sessions, setSessions] = useState([]); 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [selectedSession, setSelectedSession] = useState(null); // For the details modal
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false); // <-- ADD THIS
 
 // Replace your old fetchSessions function with this
 const fetchSessions = async () => {
@@ -61,6 +63,13 @@ const fetchSessions = async () => {
         <div className="session-list-container">
           <div className="home-header">
             <h2>Study Sessions</h2>
+            <button 
+            onClick={() => setIsEditModalOpen(true)} 
+            className="button-secondary" // Use this for a nice gray style
+            style={{marginRight: '10px'}}
+            >
+              Edit Profile
+              </button>
             <button onClick={handleSignOut} className="sign-out-button">
               Sign Out
             </button>
@@ -123,6 +132,16 @@ const fetchSessions = async () => {
           onClose={() => setSelectedSession(null)}
         />
       )}
+      {/* --- ADD THIS --- */}
+      {isEditModalOpen && (
+        <EditProfileModal
+        onClose={() => setIsEditModalOpen(false)}
+        onProfileUpdated={() => {
+      // You could refresh data here if needed, but for now just close
+  }}
+  />
+  )}
+{/* --- END OF ADDITION --- */}
     </>
   );
 }
