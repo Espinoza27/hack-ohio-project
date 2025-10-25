@@ -184,3 +184,125 @@ input {
 .chat-form button:hover {
   background-color: #0056b3;
 }
+
+/* --- Modal Styles --- */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: #282828;
+  padding: 30px;
+  border-radius: 12px;
+  border: 1px solid #444;
+  width: 90%;
+  max-width: 600px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+  z-index: 1001;
+}
+
+.modal-content h2 {
+  margin-top: 0;
+  border-bottom: 1px solid #555;
+  padding-bottom: 15px;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 15px;
+  margin-top: 25px;
+}
+
+.button-secondary {
+  background-color: #555;
+  color: #fff;
+  border: none;
+}
+.button-secondary:hover {
+  background-color: #777;
+}
+
+.modal-error {
+  color: #ff6b6b;
+  font-size: 0.9rem;
+  margin-top: 15px;
+}
+
+/* --- Session Details Modal Content --- */
+.session-details-content {
+  max-height: 40vh;
+  overflow-y: auto;
+  padding-right: 10px; /* for scrollbar */
+}
+.session-description-modal {
+  background-color: #222;
+  padding: 15px;
+  border-radius: 8px;
+  white-space: pre-wrap; /* Preserves line breaks in description */
+}
+
+
+/* --- New Home Page Layout --- */
+.home-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.sign-out-button {
+  background-color: #d9534f;
+  color: white;
+  border: none;
+}
+.sign-out-button:hover {
+  background-color: #c9302c;
+  border-color: #ac2925;
+}
+
+/* --- New Condensed Session Item --- */
+.session-item-condensed {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #282828;
+  padding: 20px;
+  border-radius: 12px;
+  border: 1px solid #444;
+  transition: all 0.2s ease;
+}
+
+.session-item-condensed:hover {
+  border-color: #646cff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.session-item-condensed h3 {
+  margin: 0 0 5px 0;
+}
+
+.session-item-condensed p {
+  margin: 0;
+  color: #aaa;
+}
+.session-item-condensed .session-time-start {
+  font-size: 0.9rem;
+  color: #ccc;
+  margin-top: 5px;
+}
+
+/* Fix old session item styles */
+.session-item {
+  display: none; /* Hide the old style */
+}

@@ -1,14 +1,16 @@
 // src/SessionPage.jsx
 //Line 53 for specific session page
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
-import { rtDB } from './firebase'; // <-- Import Realtime Database
-import { ref, onValue, push, serverTimestamp } from 'firebase/database'; // <-- Import chat functions
+import { useParams, useNavigate } from 'react-router-dom'; // <-- Fixed and combined
+import { rtDB, db } from './firebase'; // <-- Combined Firebase imports
+import { ref, onValue, push, serverTimestamp, remove } from 'firebase/database'; // <-- Combined DB imports
+import { doc, deleteDoc } from 'firebase/firestore';
 
 const SessionPage = () => {
   const { sessionId } = useParams(); // Get session ID from URL
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
+  const navigate = useNavigate();
 
   // Set up a reference to the chat room for this specific session
   const messagesRef = ref(rtDB, `chats/${sessionId}`);
@@ -51,10 +53,39 @@ const SessionPage = () => {
     setNewMessage(''); // Clear the input box
   };
 
+  // Add this new function
+  const handleEndSession = async () => {
+    if (!window.confirm("Are you sure you want to end this session? This will delete all messages and the session itself.")) {
+      return;
+    }
+    try {
+    // 1. Delete the Firestore document for the session
+      const sessionDocRef = doc(db, 'sessions', sessionId);
+      await deleteDoc(sessionDocRef);
+
+    // 2. Delete the chat history from Realtime Database
+      const chatRef = ref(rtDB, `chats/${sessionId}`);
+      await remove(chatRef);
+
+    // 3. Navigate back to the home page
+      navigate('/');
+    } catch (error) {
+      console.error("Error ending session: ", error);
+      alert("Failed to end session. Please try again.");
+    }
+  };
+
   //Session Page begins here
   //This is the page you get taken to when you click join
   return (
     <div className="session-container">
+      <button 
+        onClick={handleEndSession} 
+        style={{ float: 'right', backgroundColor: '#d9534f', borderColor: '#d43f3a' }}
+      >
+        End Session
+      </button>
+      {/* --- END OF BUTTON --- */}
       <h2>Study Session: {sessionId}</h2>
       
       {/* --- Chat Messages Display --- */}
