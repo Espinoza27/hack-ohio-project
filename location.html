@@ -1,0 +1,86 @@
+<!-- location.html -->
+<!doctype html>
+<html>
+<head><meta charset="utf-8"><title>Location Demo</title></head>
+<body>
+  <h2>Share location (consent required)</h2>
+  <button id="start">Start sharing</button>
+  <button id="stop" disabled>Stop sharing</button>
+  <pre id="status"></pre>
+
+  <script>
+    // UI elements
+    const startBtn = document.getElementById('start');
+    const stopBtn  = document.getElementById('stop');
+    const statusEl = document.getElementById('status');
+
+    // runtime vars
+    let watchId = null;
+    const SERVER_UPLOAD_URL = 'http://localhost:3000/locations';
+
+    function log(msg) { statusEl.textContent += msg + "\\n"; }
+
+    // Success callback for position updates
+    async function onPosition(pos) {
+      const payload = {
+        timestamp: new Date(pos.timestamp).toISOString(),
+        lat: pos.coords.latitude,
+        lon: pos.coords.longitude,
+        accuracy: pos.coords.accuracy,
+        altitude: pos.coords.altitude,
+        speed: pos.coords.speed
+      };
+      log('Position: ' + JSON.stringify(payload));
+
+      // Optional: send to server (over HTTPS)
+      try {
+        await fetch(SERVER_UPLOAD_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+          credentials: 'include' // if you are using cookies/auth; otherwise omit
+        });
+        log('Sent to server');
+      } catch (err) {
+        log('Server upload failed: ' + err.message);
+      }
+    }
+
+    function onError(err) {
+      log('Geolocation error: ' + err.message);
+    }
+
+    startBtn.addEventListener('click', async () => {
+      // Confirm explicit, informed consent (required by policy/law)
+      if (!confirm('Allow this page to share your location?')) return;
+
+      if (!('geolocation' in navigator)) {
+        log('Geolocation not supported by this browser.');
+        return;
+      }
+
+      // request permission & start watching
+      // options: enableHighAccuracy may use more battery (GPS)
+      watchId = navigator.geolocation.watchPosition(onPosition, onError, {
+        enableHighAccuracy: true,
+        maximumAge: 5_000,       // accept cached positions up to 5s
+        timeout: 10_000
+      });
+
+      startBtn.disabled = true;
+      stopBtn.disabled = false;
+      log('Started tracking (watchId=' + watchId + ')');
+    });
+
+    stopBtn.addEventListener('click', () => {
+      if (watchId !== null) {
+        navigator.geolocation.clearWatch(watchId);
+        log('Stopped tracking');
+        watchId = null;
+      }
+      startBtn.disabled = false;
+      stopBtn.disabled = true;
+    });
+  </script>
+</body>
+</html>
