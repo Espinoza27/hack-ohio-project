@@ -306,3 +306,16 @@ input {
 .session-item {
   display: none; /* Hide the old style */
 }
+
+.create-button-full {
+  background-color: #007aff;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  font-size: 1rem;
+  cursor: pointer;
+}
+.create-button-full:hover {
+  background-color: #0056b3;
+}
