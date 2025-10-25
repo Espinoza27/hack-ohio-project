@@ -5,7 +5,9 @@ import { rtDB } from './firebase'; // Realtime Database
 import { ref, onValue, push, serverTimestamp } from 'firebase/database';
 import { userProfile } from './Profile.js'; // Make sure Profile.js exports userProfile
 
+
 const defaultPic = 'https://i.pinimg.com/originals/73/83/4b/73834b0cfd3f4cf3f893ececab22a258.jpg';
+
 
 const SessionPage = () => {
   const { sessionId } = useParams(); // Session ID from URL
@@ -14,8 +16,10 @@ const SessionPage = () => {
   const [newMessage, setNewMessage] = useState('');
   const [sessionName, setSessionName] = useState('');
 
+
   // Reference to the chat room
   const messagesRef = ref(rtDB, `chats/${sessionId}`);
+
 
   // Fetch messages in real-time
   useEffect(() => {
@@ -32,9 +36,11 @@ const SessionPage = () => {
       }
     });
 
+
     // Cleanup listener
     return () => unsubscribe();
   }, [sessionId]);
+
 
   // Fetch session name (or use sessionId as placeholder)
   useEffect(() => {
@@ -42,10 +48,12 @@ const SessionPage = () => {
     setSessionName(sessionId);
   }, [sessionId]);
 
+
   // Send a new message
   const handleSendMessage = (e) => {
     e.preventDefault();
     if (newMessage.trim() === '') return;
+
 
     push(messagesRef, {
       text: newMessage,
@@ -54,8 +62,10 @@ const SessionPage = () => {
       userPic: userProfile.picture || defaultPic,
     });
 
+
     setNewMessage('');
   };
+
 
   return (
     <div className="session-container" style={{ padding: '20px', maxWidth: '700px', margin: '0 auto' }}>
@@ -75,10 +85,12 @@ const SessionPage = () => {
         Return to Home
       </button>
 
+
       {/* --- Session Title --- */}
       <h2 className="session-title" style={{ marginBottom: '20px' }}>
         Study Session: {sessionName || 'Loading...'}
       </h2>
+
 
       {/* --- Chat Messages --- */}
       <div
@@ -121,6 +133,7 @@ const SessionPage = () => {
         ))}
       </div>
 
+
       {/* --- New Message Form --- */}
       <form onSubmit={handleSendMessage} style={{ display: 'flex', gap: '10px', marginTop: '15px' }}>
         <input
@@ -148,4 +161,11 @@ const SessionPage = () => {
   );
 };
 
+
 export default SessionPage;
+
+
+
+
+
+
