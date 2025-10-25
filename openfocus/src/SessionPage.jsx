@@ -1,4 +1,5 @@
 // src/SessionPage.jsx
+//Line 53 for specific session page
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { rtDB } from './firebase'; // <-- Import Realtime Database
@@ -50,18 +51,19 @@ const SessionPage = () => {
     setNewMessage(''); // Clear the input box
   };
 
+  //Session Page begins here
+  //This is the page you get taken to when you click join
   return (
     <div className="session-container">
       <h2>Study Session: {sessionId}</h2>
       
       {/* --- Chat Messages Display --- */}
-      <div style={{ border: '1px solid #ccc', height: '300px', overflowY: 'auto', padding: '10px' }}>
+      <div className="chat-box">
         {messages.map(msg => (
-          <div key={msg.id}>
+          <div key={msg.id} className="chat-message">
             <p>
               {msg.text} 
-              <small style={{ color: 'gray', marginLeft: '10px' }}>
-                {/* Format the timestamp to be readable */}
+              <small>
                 {new Date(msg.timestamp).toLocaleTimeString()}
               </small>
             </p>
@@ -70,7 +72,7 @@ const SessionPage = () => {
       </div>
 
       {/* --- New Message Form --- */}
-      <form onSubmit={handleSendMessage}>
+      <form onSubmit={handleSendMessage} className="chat-form">
         <input
           type="text"
           value={newMessage}
@@ -81,6 +83,6 @@ const SessionPage = () => {
       </form>
     </div>
   );
-};
+}
 
 export default SessionPage;
