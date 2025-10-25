@@ -1,15 +1,14 @@
 // src/SignUpPage.jsx
 import React, { useState } from 'react';
-import { auth, db } from './firebase'; // <-- 1. Notice 'storage' is gone
+import { auth, db } from './firebase';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
 import { useNavigate, Link } from 'react-router-dom';
-import axios from 'axios'; // <-- 2. Import axios for uploading
+import axios from 'axios';
 
-// --- !! IMPORTANT !! ---
-// Replace these with your Cloudinary details from Step 2
-const CLOUDINARY_CLOUD_NAME = "ddf4hdczl";
-const CLOUDINARY_UPLOAD_PRESET = "qvdvxd3d";
+// --- Cloudinary Details ---
+const CLOUDINARY_CLOUD_NAME = "ddf4hdczl"; // Your Cloud Name
+const CLOUDINARY_UPLOAD_PRESET = "qvdvxd3d"; // Your Upload Preset
 // -----------------------
 
 const defaultPic = 'https://i.pinimg.com/originals/73/83/4b/73834b0cfd3f4cf3f893ececab22a258.jpg';
@@ -43,13 +42,11 @@ const SignUpPage = () => {
     }
 
     try {
-      // 1. Create the user
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      let photoURL = defaultPic; // Start with the default
+      let photoURL = defaultPic;
 
-      // 2. If user uploaded a file, upload it to CLOUDINARY
       if (profilePicFile) {
         const formData = new FormData();
         formData.append('file', profilePicFile);
@@ -59,16 +56,14 @@ const SignUpPage = () => {
           `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
           formData
         );
-        photoURL = res.data.secure_url; // 3. Get the public URL from Cloudinary
+        photoURL = res.data.secure_url;
       }
 
-      // 4. Update the user's Auth profile
       await updateProfile(user, {
         displayName: displayName,
         photoURL: photoURL
       });
 
-      // 5. Create their profile document in Firestore
       const userDocRef = doc(db, "users", user.uid);
       await setDoc(userDocRef, {
         displayName: displayName,
@@ -88,83 +83,90 @@ const SignUpPage = () => {
   };
 
   return (
-    <div className="session-container">
-      <h2>Create Your Profile</h2>
-      <form onSubmit={handleSignUp} className="session-form-detailed">
-        
-        <div className="form-group full-width" style={{alignItems: 'center'}}>
-          <label>Profile Picture (Optional)</label>
-          <input 
-            type="file" 
-            accept="image/*"
-            onChange={handleFileChange} 
-            style={{border: 'none', padding: 0}}
-          />
-        </div>
+    // --- 1. Add this outer container for centering ---
+    <div className="auth-page-container">
+      <div className="auth-form-wrapper"> {/* Renamed from session-container for clarity */}
+        <h2>Create Your Profile</h2>
+        <form onSubmit={handleSignUp} className="session-form-detailed">
+          
+          <div className="form-group full-width profile-pic-upload">
+            <label htmlFor="profilePicInput">Profile Picture (Optional)</label>
+            <input 
+              id="profilePicInput" // Added id for label association
+              type="file" 
+              accept="image/*"
+              onChange={handleFileChange} 
+              className="file-input" // Class for styling
+            />
+            {/* Optional: Add preview here later */}
+          </div>
 
-        {/* ... all your other form fields (DisplayName, Email, etc.) ... */}
-        
-        <div className="form-group full-width">
-          <label>Display Name</label>
-          <input
-            type="text"
-            value={displayName}
-            onChange={(e) => setDisplayName(e.target.value)}
-            placeholder="Your public name"
-            required
-          />
-        </div>
-        <div className="form-group full-width">
-          <label>Email</label>
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="Email"
-            required
-          />
-        </div>
-        <div className="form-group full-width">
-          <label>Password</label>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="Password"
-            required
-          />
-        </div>
-        <div className="form-group half-width">
-          <label>Major (Optional)</label>
-          <input
-            type="text"
-            value={major}
-            onChange={(e) => setMajor(e.target.value)}
-            placeholder="e.g., Computer Science"
-          />
-        </div>
-        <div className="form-group half-width">
-          <label>Courses (Optional)</label>
-          <input
-            type="text"
-            value={coursesStr}
-            onChange={(e) => setCoursesStr(e.target.value)}
-            placeholder="e.g., CSE 1223, MATH 1151"
-          />
-        </div>
+          <div className="form-group full-width">
+            <label>Display Name</label>
+            <input
+              type="text"
+              value={displayName}
+              onChange={(e) => setDisplayName(e.target.value)}
+              placeholder="Your public name"
+              required
+            />
+          </div>
+          
+          <div className="form-group full-width">
+            <label>Email</label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Email"
+              required
+            />
+          </div>
 
-        <div className="modal-actions full-width">
-          <button type="submit" className="create-button-full" disabled={loading}>
-            {loading ? 'Creating...' : 'Sign Up'}
-          </button>
-        </div>
+          <div className="form-group full-width">
+            <label>Password</label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Password"
+              required
+            />
+          </div>
+          
+          <div className="form-group half-width">
+            <label>Major (Optional)</label>
+            <input
+              type="text"
+              value={major}
+              onChange={(e) => setMajor(e.target.value)}
+              placeholder="e.g., Computer Science"
+            />
+          </div>
+          
+          <div className="form-group half-width">
+            <label>Courses (Optional)</label>
+            <input
+              type="text"
+              value={coursesStr}
+              onChange={(e) => setCoursesStr(e.target.value)}
+              placeholder="e.g., CSE 1223, MATH 1151"
+            />
+          </div>
+
+          <div className="modal-actions full-width">
+            <button type="submit" className="create-button-full" disabled={loading}>
+              {loading ? 'Creating...' : 'Sign Up'}
+            </button>
+          </div>
+          
+          {error && <p className="modal-error full-width">{error}</p>}
         
-        {error && <p className="modal-error full-width">{error}</p>}
-      
-      </form>
-      <p style={{textAlign: 'center', marginTop: '20px'}}>
-        Already have an account? <Link to="/login">Log In</Link>
-      </p>
+        </form>
+        <p className="auth-switch-link">
+          Already have an account? <Link to="/login">Log In</Link>
+        </p>
+      </div>
     </div>
   );
 };
