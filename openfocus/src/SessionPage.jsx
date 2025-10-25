@@ -9,6 +9,7 @@ import UserProfileModal from './UserProfileModal'; // Import profile modal
 // Default picture if a user doesn't have one
 const defaultPic = 'https://i.pinimg.com/originals/73/83/4b/73834b0cfd3f4cf3f893ececab22a258.jpg';
 
+
 const SessionPage = () => {
   const { sessionId } = useParams();
   const navigate = useNavigate();
@@ -123,7 +124,7 @@ const SessionPage = () => {
                   </small>
                 </p>
               </div> {/* Close chat-message div */}
-            </div> // Close chat-message-with-pic div
+            </div>
           ))}
         </div>
 
