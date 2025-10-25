@@ -2,6 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { rtDB } from './firebase'; // <-- Import Realtime Database
 import { ref, onValue, push, serverTimestamp } from 'firebase/database'; // <-- Import chat functions
+import { userProfile } from "./Profile.js"; // Adjust path if needed
+
+const defaultPic = 'https://i.pinimg.com/originals/73/83/4b/73834b0cfd3f4cf3f893ececab22a258.jpg';
+
 
 const SessionPage = () => {
   const { sessionId } = useParams(); // Get session ID from URL
@@ -51,25 +55,37 @@ const SessionPage = () => {
 
 
   
-  //Session Page begins here
-  //This is the page you get taken to when you click join
+ //Session Page begins here
   return (
-    <div className="session-container">
-      <h2>Study Session: {sessionId}</h2>
-      
-      {/* --- Chat Messages Display --- */}
-      <div className="chat-box">
-        {messages.map(msg => (
-          <div key={msg.id} className="chat-message">
-            <p>
-              {msg.text} 
-              <small>
-                {new Date(msg.timestamp).toLocaleTimeString()}
+    <div className="session-container" style={{ padding: '20px', maxWidth: '700px', margin: '0 auto' }}>
+      <h2 className="session-title">Study Session: {sessionName || 'Loading...'}</h2>
+
+
+      {/* Chat Messages */}
+      <div className="chat-box" style={{ border: '1px solid #bbb', borderRadius: '8px', padding: '10px', minHeight: '400px', backgroundColor: '#f7f7f7' }}>
+        {messages.length === 0 && <p className="no-messages">No messages yet. Start the conversation!</p>}
+        {messages.map((msg, index) => (
+          <div key={msg.id} style={{ display: 'flex', gap: '10px', marginBottom: '15px', alignItems: 'flex-start' }}>
+            {/* Profile Picture */}
+            <img
+              src={msg.userPic || defaultPic}
+              alt={msg.userName || 'Unknown'}
+              style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover' }}
+            />
+            <div>
+              {/* User Name */}
+              <div style={{ fontWeight: 'bold', fontSize: '14px', color: '#333' }}>{msg.userName || 'Unknown'}</div>
+              {/* Message */}
+              <div style={{ fontSize: '16px', color: '#111' }}>{msg.text}</div>
+              {/* Timestamp */}
+              <small style={{ fontSize: '10px', color: '#555' }}>
+                {msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
               </small>
             </div>
           </div>
         ))}
       </div>
+
 
       {/* Send Message */}
       <form onSubmit={handleSendMessage} style={{ display: 'flex', gap: '10px', marginTop: '15px' }}>
@@ -87,26 +103,9 @@ const SessionPage = () => {
           Send
         </button>
       </form>
-
-      {/* --- Back to Home Button --- */}
-      <div style={{ marginTop: '20px', textAlign: 'center' }}>
-        <button
-          onClick={() => navigate('/')}
-          style={{
-            padding: '8px 16px',
-            fontSize: '14px',
-            backgroundColor: '#f0f0f0',
-            border: '1px solid #ccc',
-            borderRadius: '4px',
-            cursor: 'pointer'
-          }}
-        >
-          ← Back to Home
-        </button>
-      </div>
-
     </div>
   );
 };
+
 
 export default SessionPage;
