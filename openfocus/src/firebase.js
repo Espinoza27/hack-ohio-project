@@ -3,6 +3,7 @@ import { initializeApp } from "firebase/app";
 // Import the database services you need
 import { getFirestore } from "firebase/firestore";
 import { getDatabase } from "firebase/database";
+import { getAuth } from "firebase/auth"; // If you need authentication
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -22,3 +23,4 @@ const app = initializeApp(firebaseConfig);
 // Initialize and export the services
 export const db = getFirestore(app); // Firestore for session list
 export const rtDB = getDatabase(app); // Realtime Database for chat
+export const auth = getAuth(app); // <-- 2. INITIALIZE AUTH SERVICE
