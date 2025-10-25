@@ -1,0 +1,67 @@
+# To push your changes
+
+git add ./
+git commit -m "message here"
+git push
+
+
+
+# To see updated changes
+git pull
+
+
+## What branch am I In?
+git branch --show-current
+
+
+
+## Essential Commands for Your Workflow
+
+Here are the commands you'll need for working with your `main` and `development` branches.
+
+
+
+
+2.  **Switch to the beta branch
+    git switch beta
+
+-----
+
+### 2\. Daily beta Work
+
+You should spend most of your time on the `beta` branch.
+
+# Modify files, add new features, etc.
+    git add ./
+    git commit -m "Implement new feature X"
+
+3.  **Push to GitHub:**
+  
+    # git push
+    ```
+
+-----
+
+# Change back to main branch
+    git switch main
+    
+# Merge `beta` into `main`:
+   
+    git merge beta
+    
+# Push the updated `main` to GitHub:**
+    git push origin main
+
+-----
+
+
+# Switch back to `beta`:
+
+    git switch beta
+
+# Merge `main` into `beta`:**
+    
+    git merge main
+    
+
+-----
