@@ -1,56 +1,68 @@
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+/* --- Reset and Base Styles --- */
+:root {
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color-scheme: light dark;
+  color: rgba(255, 255, 255, 0.87);
+  background-color: #242424;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
 }
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+/* src/App.css */
+h2 {
+  font-size: 2.5rem;
+  margin-top: 0;
+  border-bottom: 1px solid #444;
+  padding-bottom: 10px;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
+h3 {
+  margin: 0;
+  font-size: 1.25rem;
 }
 
-.card {
-  padding: 2em;
+button {
+  border-radius: 8px;
+  border: 1px solid transparent;
+  padding: 0.6em 1.2em;
+  font-size: 1em;
+  font-weight: 500;
+  font-family: inherit;
+  background-color: #1a1a1a;
+  cursor: pointer;
+  transition: border-color 0.25s;
+}
+button:hover {
+  border-color: #646cff;
 }
 
-.read-the-docs {
-  color: #888;
+input {
+  font-family: inherit;
+  font-size: 1em;
+  border-radius: 8px;
+  border: 1px solid #555;
+  padding: 0.6em 1.2em;
+  background-color: #2a2a2a;
+  color: #fff;
 }
 
-.session-container {
-  max-width: 50vw;  /* <-- CHANGE THIS */
-  margin: 10;        /* <-- CHANGE THIS */
-  padding: 20px;     
-}
 /* --- Home Page Layout --- */
 .home-layout {
   display: flex;
   flex-direction: row;
-  padding: 20px;
+  padding: 30px;
   gap: 30px; /* Space between the columns */
 }
 
@@ -63,17 +75,19 @@
 /* --- Right Column: Map Placeholder --- */
 .map-placeholder {
   flex: 1.5; /* This column will take 1.5 "parts" (making it wider) */
-  background-color: #2a2a2a; /* A box to show the empty space */
+  background-color: #1a1a1a;
   border: 1px solid #444;
-  border-radius: 8px;
+  border-radius: 12px;
   padding: 20px;
   min-height: 80vh; /* Make sure it has height */
+  box-sizing: border-box; /* Ensures padding doesn't break layout */
 }
 
 /* --- Session Form Styling --- */
 .session-form {
   display: flex;
   margin-bottom: 25px;
+  gap: 10px;
 }
 
 .session-form input {
@@ -83,17 +97,17 @@
   border: 1px solid #444;
   background-color: #222;
   color: #fff;
-  border-radius: 6px 0 0 6px; /* Rounds the left corners */
+  border-radius: 6px; 
 }
 
 .session-form button {
   padding: 0 20px;
   font-size: 1rem;
   border: none;
-  background-color: #007aff;
+  background-color: #007aff; /* Blue create button */
   color: white;
   cursor: pointer;
-  border-radius: 0 6px 6px 0; /* Rounds the right corners */
+  border-radius: 6px;
   transition: background-color 0.2s;
 }
 
@@ -115,13 +129,15 @@
   align-items: center;
   background-color: #282828;
   padding: 20px;
-  border-radius: 8px;
+  border-radius: 12px;
   border: 1px solid #444;
+  transition: all 0.2s ease;
 }
 
-.session-item h3 {
-  margin: 0;
-  font-size: 1.25rem;
+.session-item:hover {
+  border-color: #646cff;
+  transform: translateY(-2px); /* Lifts the card slightly */
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
 }
 
 .join-button {
@@ -136,4 +152,57 @@
 
 .join-button:hover {
   background-color: #28a745;
+}
+
+/* --- Session Page (Chat Page) Styling --- */
+.session-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.chat-box {
+  border: 1px solid #444;
+  background-color: #2a2a2a;
+  height: 400px;
+  overflow-y: auto;
+  padding: 10px;
+  border-radius: 8px;
+  margin-bottom: 15px;
+}
+
+.chat-message {
+  margin-bottom: 10px;
+}
+
+.chat-message p {
+  margin: 0;
+  padding: 8px 12px;
+  background-color: #333;
+  border-radius: 10px;
+  display: inline-block;
+}
+
+.chat-message small {
+  color: #999;
+  margin-left: 10px;
+  font-size: 0.75rem;
+}
+
+.chat-form {
+  display: flex;
+  gap: 10px;
+}
+
+.chat-form input {
+  flex-grow: 1;
+}
+
+.chat-form button {
+  background-color: #007aff;
+  color: white;
+  border: none;
+}
+.chat-form button:hover {
+  background-color: #0056b3;
 }

@@ -13,7 +13,7 @@ const HomePage = () => {
     const sessionsList = querySnapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data()
-    }));
+    })).sort((a, b) => b.createdAt.seconds - a.createdAt.seconds); // Sort by newest first
     setSessions(sessionsList);
   };
 
