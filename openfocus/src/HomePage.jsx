@@ -15,6 +15,13 @@ const HomePage = () => {
   const [sessions, setSessions] = useState([]);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [selectedSession, setSelectedSession] = useState(null); // For the details modal
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const canvasRef = useRef(null);
+  const [fakeUsers] = useState([
+    { x: 100, y: 150, capacity: 30 },
+    { x: 300, y: 200, capacity: 60 },
+    { x: 500, y: 100, capacity: 40 }
+  ]);
 
 // Replace your old fetchSessions function with this
 const fetchSessions = async () => {
