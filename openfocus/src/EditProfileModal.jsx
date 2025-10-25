@@ -1,16 +1,12 @@
 // src/EditProfileModal.jsx
-import React, { useState, useEffect } from 'react';
-import { auth, db } from './firebase'; // <-- 1. 'storage' is gone
+import React, { useState, useEffect, useRef } from 'react';
+import { auth, db } from './firebase';
 import { updateProfile } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
-import axios from 'axios'; // <-- 2. Import axios
+import axios from 'axios';
 
-// --- !! IMPORTANT !! ---
-// Replace these with your Cloudinary details from Step 2
 const CLOUDINARY_CLOUD_NAME = "ddf4hdczl";
 const CLOUDINARY_UPLOAD_PRESET = "qvdvxd3d";
-// -----------------------
-
 const defaultPic = 'https://i.pinimg.com/originals/73/83/4b/73834b0cfd3f4cf3f893ececab22a258.jpg';
 
 const EditProfileModal = ({ onClose, onProfileUpdated }) => {
@@ -21,13 +17,16 @@ const EditProfileModal = ({ onClose, onProfileUpdated }) => {
   const [currentPhotoURL, setCurrentPhotoURL] = useState(defaultPic);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     const loadUserData = async () => {
       const user = auth.currentUser;
       if (!user) return;
+
       setDisplayName(user.displayName || '');
       setCurrentPhotoURL(user.photoURL || defaultPic);
+
       const docRef = doc(db, "users", user.uid);
       const docSnap = await getDoc(docRef);
       if (docSnap.exists()) {
@@ -46,6 +45,10 @@ const EditProfileModal = ({ onClose, onProfileUpdated }) => {
     }
   };
 
+  const handleImageClick = () => {
+    fileInputRef.current?.click();
+  };
+
   const handleSave = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -61,63 +64,89 @@ const EditProfileModal = ({ onClose, onProfileUpdated }) => {
     try {
       let photoURL = currentPhotoURL;
 
-      // 3. If a *new* file was selected, upload it to Cloudinary
+      // Upload to Cloudinary if a new file is selected
       if (profilePicFile) {
         const formData = new FormData();
         formData.append('file', profilePicFile);
         formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
-        
+
         const res = await axios.post(
           `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
           formData
         );
-        photoURL = res.data.secure_url; // 4. Get the new URL
+        photoURL = res.data.secure_url;
       }
 
-      // 5. Update Auth
-      await updateProfile(user, {
-        displayName: displayName,
-        photoURL: photoURL
-      });
+      // Update Firebase Auth and Firestore
+      await updateProfile(user, { displayName, photoURL });
 
-      // 6. Update Firestore
       const userDocRef = doc(db, "users", user.uid);
       await setDoc(userDocRef, {
-        displayName: displayName,
-        major: major,
-        courses: coursesStr.split(',').map(course => course.trim()).filter(c => c),
-        photoURL: photoURL
+        displayName,
+        major,
+        courses: coursesStr.split(',').map(c => c.trim()).filter(Boolean),
+        photoURL
       });
-      
+
       setLoading(false);
       onProfileUpdated();
       onClose();
     } catch (err) {
-      setLoading(false);
-      setError(err.message);
       console.error(err);
+      setError(err.message);
+      setLoading(false);
     }
   };
 
   return (
     <div className="modal-overlay">
-      <div className="modal-content">
+      <div className="modal-content" style={{ textAlign: 'center' }}>
         <h2>Edit Your Profile</h2>
-        <form onSubmit={handleSave} className="session-form-detailed">
-          
-          <div className="form-group full-width" style={{alignItems: 'center'}}>
-            <label>Profile Picture</label>
-            <img src={currentPhotoURL} alt="Profile" className="profile-pic-preview" />
-            <input 
-              type="file" 
-              accept="image/*" 
-              onChange={handleFileChange} 
-              style={{border: 'none', padding: 0}}
+
+        {/* 🔹 Profile Picture Header and Circle */}
+        <div style={{ marginTop: '10px', marginBottom: '25px' }}>
+          <h3 style={{ marginBottom: '10px' }}>Profile Picture</h3>
+
+          <div style={{ display: 'flex', justifyContent: 'center' }}>
+            <img
+              src={currentPhotoURL}
+              alt="Profile"
+              className="profile-pic-preview"
+              onClick={handleImageClick}
+              style={{
+                cursor: 'pointer',
+                width: '130px',
+                height: '130px',
+                borderRadius: '50%',
+                objectFit: 'cover',
+                border: '3px solid #ccc',
+                transition: '0.2s',
+              }}
             />
           </div>
 
-          {/* ... all your other form fields (DisplayName, Major, etc.) ... */}
+          <p
+            style={{
+              fontSize: '0.9rem',
+              color: '#666',
+              marginTop: '8px',
+              fontStyle: 'italic',
+            }}
+          >
+            Click to change profile picture
+          </p>
 
+          <input
+            type="file"
+            accept="image/*"
+            ref={fileInputRef}
+            onChange={handleFileChange}
+            style={{ display: 'none' }}
+          />
+        </div>
+
+        {/* 🔹 Profile Details Form */}
+        <form onSubmit={handleSave} className="session-form-detailed">
           <div className="form-group full-width">
             <label>Display Name</label>
             <input
@@ -127,6 +156,7 @@ const EditProfileModal = ({ onClose, onProfileUpdated }) => {
               required
             />
           </div>
+
           <div className="form-group half-width">
             <label>Major</label>
             <input
@@ -136,6 +166,7 @@ const EditProfileModal = ({ onClose, onProfileUpdated }) => {
               placeholder="e.g., Computer Science"
             />
           </div>
+
           <div className="form-group half-width">
             <label>Courses</label>
             <input
@@ -154,7 +185,7 @@ const EditProfileModal = ({ onClose, onProfileUpdated }) => {
               {loading ? 'Saving...' : 'Save Changes'}
             </button>
           </div>
-          
+
           {error && <p className="modal-error full-width">{error}</p>}
         </form>
       </div>
