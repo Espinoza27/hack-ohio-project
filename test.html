@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>User Profile</title>
+</head>
+
+<body>
+  <h1>Skylers Profile</h1>
+  <p>All info for this user is here</p>
+
+    <div id="profile-display"></div>
+
+
+  <!-- Points to the javascript code-->
+  <script src="profile.js"></script>
+
+  <script>
+    // Create a test profile
+    const userProfile = new Profile('Skyler Williams', 'Computer Engineering', ['ECE 2060', 'MATH 2410']);
+
+    // Add and remove classes to test
+    userProfile.addClass('ENG 1020');
+    userProfile.removeClass('MATH 2410');
+
+    // Print the profile info
+    console.log(userProfile.getProfileInfo());
+
+    const profileDiv = document.getElementById('profile-display');
+profileDiv.innerHTML = `
+  <h2>${userProfile.name}</h2>
+  <p>Major: ${userProfile.major}</p>
+  <p>Classes: ${userProfile.classes.join(', ')}</p>
+`;
+  </script>
+
+
+</body>
+
+</html>
