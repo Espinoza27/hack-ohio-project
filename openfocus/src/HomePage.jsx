@@ -3,6 +3,9 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { db } from './firebase'; 
 import { collection, addDoc, getDocs } from 'firebase/firestore'; 
+// Add these to your other imports
+import { auth } from './firebase';
+import { signOut } from 'firebase/auth';
 
 const HomePage = () => {
   const [sessions, setSessions] = useState([]); 
@@ -39,12 +42,31 @@ const HomePage = () => {
     }
   };
 
+  const handleSignOut = () => {
+    signOut(auth).catch((error) => {
+      console.error("Sign out error:", error);
+    });
+    // The listener in App.jsx will automatically
+    // redirect to the login page.
+  };
+
+  
+
   return (
     // This is the new 2-column layout container
     <div className="home-layout">
       
       {/* --- Column 1: Session List --- */}
       <div className="session-list-container">
+        {/* --- ADD THIS BUTTON --- */}
+    <button 
+      onClick={handleSignOut} 
+      style={{ float: 'right', backgroundColor: '#d9534f', borderColor: '#d43f3a' }}
+    >
+      Sign Out
+    </button>
+    {/* --- END OF BUTTON --- */}
+    
         <h2>Study Sessions</h2>
 
         <form onSubmit={handleCreateSession} className="session-form">
