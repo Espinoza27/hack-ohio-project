@@ -1,54 +1,59 @@
 <!DOCTYPE html>
 <html>
-
 <head>
-
-  <title>User Profile</title>
+  <title>Editable User Profile</title>
   <style>
+    /* Basic page styling */
     body {
       font-family: Arial, sans-serif;
       margin: 20px;
     }
 
+    /* Container for profile picture and info */
     #profile-container {
-      display: flex;
+      display: flex; /* side by side layout */
       align-items: center;
-      gap: 20px;
+      gap: 20px; /* space between picture and info */
     }
 
+    /* Profile picture styling */
     #profile-pic {
       width: 300px;
       height: 300px;
-      object-fit: cover;
-      border-radius: 50%;
+      object-fit: cover; /* keeps image ratio, fills square */
+      border-radius: 50%; /* makes image circular */
       border: 2px solid #333;
-      cursor: pointer;
+      cursor: pointer; /* indicates clickable */
     }
 
+    /* Container for profile info (name, major, classes) */
     #profile-info {
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 10px; /* vertical spacing between items */
     }
 
+    /* Each info row */
     #profile-info div {
       font-size: 18px;
     }
 
+    /* Bold labels for Name, Major, Classes */
     #profile-info span {
       font-weight: bold;
       margin-right: 5px;
     }
 
-    /* Style editable fields */
+    /* Editable fields styling */
     .editable {
       display: inline-block;
       padding: 2px 4px;
-      border-bottom: 1px dotted #333;
+      border-bottom: 1px dotted #333; /* subtle underline to indicate editable */
       min-width: 50px;
-      cursor: text;
+      cursor: text; /* shows user can type */
     }
 
+    /* When user is editing, show stronger underline */
     .editable:focus {
       outline: none;
       border-bottom: 2px solid #333;
@@ -59,14 +64,20 @@
 
   <h2>User Profile</h2>
 
-  <!-- Hidden file input for uploading picture -->
+  <!-- Hidden file input for uploading image -->
+  <!-- Clicking the profile picture triggers this input -->
   <input type="file" id="profile-input" accept="image/*" style="display:none;">
 
+  <!-- Main profile container -->
   <div id="profile-container">
+    <!-- Profile picture -->
     <img id="profile-pic" src="https://static.vecteezy.com/system/resources/previews/036/280/650/non_2x/default-avatar-profile-icon-social-media-user-image-gray-avatar-icon-blank-profile-silhouette-illustration-vector.jpg" alt="Profile Picture">
+    
+    <!-- Profile info displayed next to picture -->
     <div id="profile-info">
       <div>
         <span>Name:</span>
+        <!-- contenteditable allows the user to type directly into this span -->
         <span id="name-edit" class="editable" contenteditable="true">Skyler Williams</span>
       </div>
       <div>
@@ -75,14 +86,18 @@
       </div>
       <div>
         <span>Classes:</span>
+        <!-- User can type comma-separated classes directly -->
         <span id="classes-edit" class="editable" contenteditable="true">ECE 2060, ENG 1020</span>
       </div>
     </div>
   </div>
 
+  <!-- Link to your profile.js file (Profile class) -->
   <script src="profile.js"></script>
+
   <script>
-    // Initialize Profile object
+    // Initialize a new Profile object
+    // Arguments: name, major, classes array, picture URL
     const userProfile = new Profile(
       'Skyler Williams',
       'Computer Engineering',
@@ -90,39 +105,44 @@
       'https://static.vecteezy.com/system/resources/previews/036/280/650/non_2x/default-avatar-profile-icon-social-media-user-image-gray-avatar-icon-blank-profile-silhouette-illustration-vector.jpg'
     );
 
-    const img = document.getElementById('profile-pic');
-    const fileInput = document.getElementById('profile-input');
-    const nameEdit = document.getElementById('name-edit');
-    const majorEdit = document.getElementById('major-edit');
-    const classesEdit = document.getElementById('classes-edit');
+    // Grab DOM elements to manipulate
+    const img = document.getElementById('profile-pic');         // profile picture <img>
+    const fileInput = document.getElementById('profile-input'); // hidden file input
+    const nameEdit = document.getElementById('name-edit');      // editable name span
+    const majorEdit = document.getElementById('major-edit');    // editable major span
+    const classesEdit = document.getElementById('classes-edit');// editable classes span
 
-    // Click on profile picture opens file picker
+    // Clicking the profile picture opens the file picker
     img.addEventListener('click', () => {
       fileInput.click();
     });
 
+    // When a file is selected, read it and update profile picture
     fileInput.addEventListener('change', () => {
       const file = fileInput.files[0];
       if (file) {
-        const reader = new FileReader();
+        const reader = new FileReader(); // converts file to displayable URL
         reader.onload = function(e) {
-          userProfile.picture = e.target.result;
-          img.src = e.target.result;
+          userProfile.picture = e.target.result; // store image in Profile object
+          img.src = e.target.result;             // update picture in DOM
         };
-        reader.readAsDataURL(file);
+        reader.readAsDataURL(file); // read file as base64 string
       }
     });
 
-    // Update Profile object as user edits
+    // Update Profile name whenever user edits the span
     nameEdit.addEventListener('input', () => {
       userProfile.name = nameEdit.textContent;
     });
 
+    // Update Profile major whenever user edits the span
     majorEdit.addEventListener('input', () => {
       userProfile.major = majorEdit.textContent;
     });
 
+    // Update Profile classes whenever user edits the span
     classesEdit.addEventListener('input', () => {
+      // Split comma-separated classes into array, trim whitespace, remove empty strings
       userProfile.classes = classesEdit.textContent.split(',').map(c => c.trim()).filter(c => c);
     });
   </script>
