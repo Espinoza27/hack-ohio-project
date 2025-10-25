@@ -1,3 +1,5 @@
+OPEN FOCUS
+
 Create digital map of floor of some building
 
 Possible extension: Get locations of user's by our project being an extension of OSU app and use
@@ -15,6 +17,20 @@ PROFILE
 name, major, classes currently taking stored by class number
 
 APP HOME SCREEN
-map
+-Has live updating map on one side that shows popular study zones and red, yellow, green
+dependent on how occupied it is
+-Red, Yellow, Green zones dependent on set number of people that fills a building
+Ex: thomspon at max capacity when a lot of people are there and most study spots will
+be taken is around lets say 800 people, then base red zones on 700-800 people there,
+yellow on 
+-For protoype we would have one floor of thompson
+-lists suggested study sessions on that floor dependent on PROFILE
+
+PUBLIC/PRIVATE STUDY SESSION ROOMS
+-Public would have open availability to join where a chat is availble to communicate with
+people within the study session
+-Private sessions - in progress / only way to get this info would be to get data from OSU
+
+
 
 
