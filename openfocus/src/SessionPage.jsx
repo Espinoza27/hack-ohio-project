@@ -51,6 +51,9 @@ const SessionPage = () => {
     setNewMessage(''); // Clear the input box
   };
 
+
+
+  
   //Session Page begins here
   //This is the page you get taken to when you click join
   return (
