@@ -1,24 +1,22 @@
-// src/SessionPage.jsx
-//Line 53 for specific session page
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
-import { rtDB } from './firebase'; // <-- Import Realtime Database
-import { ref, onValue, push, serverTimestamp } from 'firebase/database'; // <-- Import chat functions
+import { useParams, useNavigate } from 'react-router-dom';
+import { rtDB, db } from './firebase';
+import { ref, onValue, push, serverTimestamp, remove } from 'firebase/database';
+import { doc, deleteDoc } from 'firebase/firestore';
 
 const SessionPage = () => {
-  const { sessionId } = useParams(); // Get session ID from URL
-  const navigate = useNavigate(); // Hook for navigation
+  const { sessionId } = useParams();
+  const navigate = useNavigate();
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
-  const navigate = useNavigate();
 
   // Set up a reference to the chat room for this specific session
   const messagesRef = ref(rtDB, `chats/${sessionId}`);
 
   // This hook sets up the real-time listener
   useEffect(() => {
-    // onValue() listens for changes and fires every time data is added/changed
-    onValue(messagesRef, (snapshot) => {
+    // onValue() listens for changes and returns an unsubscribe function
+    const unsubscribe = onValue(messagesRef, (snapshot) => {
       const data = snapshot.val();
       if (data) {
         // Convert the messages object into an array
@@ -34,7 +32,7 @@ const SessionPage = () => {
 
     // Clean up the listener when the component unmounts
     return () => {
-      onValue(messagesRef, () => {});
+      if (typeof unsubscribe === 'function') unsubscribe();
     };
   }, [sessionId]); // Re-run if the sessionId changes
 
@@ -49,31 +47,52 @@ const SessionPage = () => {
       timestamp: serverTimestamp(),
       // You can add a user's name here later
     });
-    
+
     setNewMessage(''); // Clear the input box
   };
 
-  //Session Page begins here
-  //This is the page you get taken to when you click join
+  // End session: delete Firestore session doc and Realtime chat history
+  const handleEndSession = async () => {
+    if (!window.confirm("Are you sure you want to end this session? This will delete all messages and the session itself.")) {
+      return;
+    }
+    try {
+      // 1. Delete the Firestore document for the session
+      const sessionDocRef = doc(db, 'sessions', sessionId);
+      await deleteDoc(sessionDocRef);
+
+      // 2. Delete the chat history from Realtime Database
+      const chatRef = ref(rtDB, `chats/${sessionId}`);
+      await remove(chatRef);
+
+      // 3. Navigate back to the home page
+      navigate('/');
+    } catch (error) {
+      console.error("Error ending session: ", error);
+      alert("Failed to end session. Please try again.");
+    }
+  };
+
+  // Session Page begins here
   return (
     <div className="session-container">
-      <button 
-        onClick={handleEndSession} 
+      <button
+        onClick={handleEndSession}
         style={{ float: 'right', backgroundColor: '#d9534f', borderColor: '#d43f3a' }}
       >
         End Session
       </button>
-      {/* --- END OF BUTTON --- */}
+
       <h2>Study Session: {sessionId}</h2>
-      
+
       {/* --- Chat Messages Display --- */}
       <div className="chat-box">
         {messages.map(msg => (
           <div key={msg.id} className="chat-message">
             <p>
-              {msg.text} 
+              {msg.text}
               <small>
-                {new Date(msg.timestamp).toLocaleTimeString()}
+                {msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString() : ''}
               </small>
             </p>
           </div>
@@ -93,8 +112,8 @@ const SessionPage = () => {
 
       {/* --- Back to Home Button --- */}
       <div style={{ marginTop: '20px', textAlign: 'center' }}>
-        <button 
-          onClick={() => navigate('/')} 
+        <button
+          onClick={() => navigate('/')}
           style={{
             padding: '8px 16px',
             fontSize: '14px',
@@ -107,7 +126,7 @@ const SessionPage = () => {
           ← Back to Home
         </button>
       </div>
-      
+
     </div>
   );
 }
