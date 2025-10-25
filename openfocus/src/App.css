@@ -861,3 +861,72 @@ input {
   border: 3px solid #555;
   margin-bottom: 10px;
 }
+
+/* --- Add to bottom of App.css --- */
+
+/* User Profile Modal Enhancements */
+.user-profile-modal {
+  text-align: center; /* Center the content */
+}
+
+.profile-modal-pic {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 4px solid #555;
+  margin-bottom: 15px;
+  display: block; /* Make it a block element */
+  margin-left: auto; /* Center the image */
+  margin-right: auto; /* Center the image */
+}
+
+.user-profile-modal h2 {
+  margin-bottom: 25px; /* More space after name */
+  color: #fff;
+  border-bottom: 1px solid #555;
+  padding-bottom: 15px;
+}
+
+.user-profile-modal .profile-details {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  text-align: left; /* Align text within details to the left */
+  margin-bottom: 25px; /* Add space before the close button */
+}
+
+.profile-detail-item {
+  display: flex;
+  flex-direction: column; /* Stack label and value/list */
+  gap: 5px;
+}
+
+.profile-detail-item strong {
+  color: #ccc;
+  font-weight: 600;
+  margin-bottom: 3px; /* Space between label and value */
+}
+
+.profile-detail-item span {
+   color: #eee; /* Lighter text for values */
+}
+
+
+.profile-courses-list {
+  margin: 0;
+  padding-left: 20px; /* Indent course list */
+  list-style: disc; /* Use standard bullets */
+}
+
+.profile-courses-list li {
+  color: #eee;
+  margin-bottom: 5px;
+}
+
+/* Optional: Loading/Error text styling */
+.loading-text, .error-text {
+    text-align: center;
+    color: #aaa;
+    margin: 40px 0;
+}
