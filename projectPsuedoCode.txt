@@ -6,7 +6,7 @@ Possible extension: Get locations of user's by our project being an extension of
 the already created annonomuys location tracking instead of having to 
 create a whole new infrastructure
 
-Make app that askes for location
+Make app that asks for location
 
 can make private or public study sessions with room number and subject being studied
 dependent on building
