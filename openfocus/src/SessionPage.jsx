@@ -1,12 +1,13 @@
 // src/SessionPage.jsx
 //Line 53 for specific session page
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { rtDB } from './firebase'; // <-- Import Realtime Database
 import { ref, onValue, push, serverTimestamp } from 'firebase/database'; // <-- Import chat functions
 
 const SessionPage = () => {
   const { sessionId } = useParams(); // Get session ID from URL
+  const navigate = useNavigate(); // Hook for navigation
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
 
@@ -84,6 +85,24 @@ const SessionPage = () => {
         />
         <button type="submit">Send</button>
       </form>
+
+      {/* --- Back to Home Button --- */}
+      <div style={{ marginTop: '20px', textAlign: 'center' }}>
+        <button 
+          onClick={() => navigate('/')} 
+          style={{
+            padding: '8px 16px',
+            fontSize: '14px',
+            backgroundColor: '#f0f0f0',
+            border: '1px solid #ccc',
+            borderRadius: '4px',
+            cursor: 'pointer'
+          }}
+        >
+          ← Back to Home
+        </button>
+      </div>
+      
     </div>
   );
 }
