@@ -1,56 +1,46 @@
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+/* src/App.css */
+h2 {
+  font-size: 2.5rem;
+  margin-top: 0;
+  border-bottom: 1px solid #444;
+  padding-bottom: 10px;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+h3 {
+  margin: 0;
+  font-size: 1.25rem;
 }
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+button {
+  border-radius: 8px;
+  border: 1px solid transparent;
+  padding: 0.6em 1.2em;
+  font-size: 1em;
+  font-weight: 500;
+  font-family: inherit;
+  background-color: #1a1a1a;
+  cursor: pointer;
+  transition: border-color 0.25s;
+}
+button:hover {
+  border-color: #646cff;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
+input {
+  font-family: inherit;
+  font-size: 1em;
+  border-radius: 8px;
+  border: 1px solid #555;
+  padding: 0.6em 1.2em;
+  background-color: #2a2a2a;
+  color: #fff;
 }
 
-.card {
-  padding: 2em;
-}
-
-.read-the-docs {
-  color: #888;
-}
-
-.session-container {
-  max-width: 50vw;  /* <-- CHANGE THIS */
-  margin: 10;        /* <-- CHANGE THIS */
-  padding: 20px;     
-}
 /* --- Home Page Layout --- */
 .home-layout {
   display: flex;
   flex-direction: row;
-  padding: 20px;
+  padding: 30px;
   gap: 30px; /* Space between the columns */
 }
 
@@ -63,29 +53,29 @@
 /* --- Right Column: Map Placeholder --- */
 .map-placeholder {
   flex: 1.5; /* This column will take 1.5 "parts" (making it wider) */
-  background-color: #2a2a2a; /* A box to show the empty space */
+  background-color: #1a1a1a;
   border: 1px solid #444;
-  border-radius: 8px;
+  border-radius: 12px;
   padding: 20px;
   min-height: 80vh; /* Make sure it has height */
+  box-sizing: border-box; /* Ensures padding doesn't break layout */
 }
 
-/* --- Session Form Styling --- */
+/* --- Session Form Styling (old one, not used but fine to keep) --- */
 .session-form {
   display: flex;
   margin-bottom: 25px;
+  gap: 10px;
 }
-
 .session-form input {
-  flex-grow: 1; /* Makes the input box fill the space */
+  flex-grow: 1;
   padding: 12px;
   font-size: 1rem;
   border: 1px solid #444;
   background-color: #222;
   color: #fff;
-  border-radius: 6px 0 0 6px; /* Rounds the left corners */
+  border-radius: 6px; 
 }
-
 .session-form button {
   padding: 0 20px;
   font-size: 1rem;
@@ -93,35 +83,693 @@
   background-color: #007aff;
   color: white;
   cursor: pointer;
-  border-radius: 0 6px 6px 0; /* Rounds the right corners */
+  border-radius: 6px;
   transition: background-color 0.2s;
 }
-
 .session-form button:hover {
   background-color: #0056b3;
 }
 
 
-/* --- Session Item Styling --- */
+/* --- Session Item Styling (old one) --- */
 .session-items {
   display: flex;
   flex-direction: column;
   gap: 15px; /* Space between each session item */
 }
-
 .session-item {
+  display: none; /* Hide the old style */
+}
+
+/* --- Session Page (Chat Page) Styling --- */
+.session-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.chat-box {
+  border: 1px solid #444;
+  background-color: #2a2a2a;
+  height: 400px;
+  overflow-y: auto;
+  padding: 10px;
+  border-radius: 8px;
+  margin-bottom: 15px;
+}
+
+.chat-message {
   display: flex;
-  justify-content: space-between; /* Pushes topic & button apart */
+  flex-direction: column;
+  align-items: flex-start;
+  margin-bottom: 10px;
+}
+.chat-sender {
+  font-size: 0.8rem;
+  color: #aaa;
+  margin-bottom: 2px;
+}
+.chat-message p {
+  margin: 0;
+  margin-top: 0; /* Cleaned up duplicate */
+  padding: 8px 12px;
+  background-color: #333;
+  border-radius: 10px;
+  display: inline-block;
+}
+.chat-message small {
+  color: #999;
+  margin-left: 10px;
+  font-size: 0.75rem;
+}
+
+.chat-form {
+  display: flex;
+  gap: 10px;
+}
+.chat-form input {
+  flex-grow: 1;
+}
+.chat-form button {
+  background-color: #007aff;
+  color: white;
+  border: none;
+}
+.chat-form button:hover {
+  background-color: #0056b3;
+}
+
+/* --- Modal Styles --- */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: #2d2d2d; /* Use the visually pleasing style */
+  padding: 30px;
+  border-radius: 12px;
+  border: 1px solid #555; /* Use the visually pleasing style */
+  width: 90%;
+  max-width: 600px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+  z-index: 1001;
+}
+.modal-content h2 {
+  margin-top: 0;
+  border-bottom: 1px solid #555;
+  padding-bottom: 15px;
+  color: #fff; /* Use the visually pleasing style */
+  font-weight: 600; /* Use the visually pleasing style */
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 15px;
+  margin-top: 25px;
+}
+.modal-actions.full-width {
+  grid-column: 1 / -1;
+  border-top: 1px solid #444;
+  padding-top: 20px;
+  margin-top: 10px;
+}
+
+.button-secondary {
+  background-color: #555;
+  color: #fff;
+  border: none;
+}
+.button-secondary:hover {
+  background-color: #777;
+}
+
+.modal-error {
+  color: #ff6b6b;
+  font-size: 0.9rem;
+  margin-top: 15px;
+}
+
+/* --- Session Details Modal Content --- */
+.session-details-content {
+  max-height: 40vh;
+  overflow-y: auto;
+  padding-right: 10px; /* for scrollbar */
+}
+.session-description-modal {
+  background-color: #222;
+  padding: 15px;
+  border-radius: 8px;
+  white-space: pre-wrap; /* Preserves line breaks in description */
+}
+
+
+/* --- New Home Page Layout --- */
+.home-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.sign-out-button {
+  background-color: #d9534f;
+  color: white;
+  border: none;
+}
+.sign-out-button:hover {
+  background-color: #c9302c;
+  border-color: #ac2525;
+}
+
+/* --- New Condensed Session Item --- */
+.session-item-condensed {
+  display: flex;
+  justify-content: space-between;
   align-items: center;
   background-color: #282828;
   padding: 20px;
-  border-radius: 8px;
+  border-radius: 12px;
   border: 1px solid #444;
+  transition: all 0.2s ease;
+}
+.session-item-condensed:hover {
+  border-color: #646cff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+.session-item-condensed h3 {
+  margin: 0 0 5px 0;
+}
+.session-item-condensed p {
+  margin: 0;
+  color: #aaa;
+}
+.session-item-condensed .session-time-start {
+  font-size: 0.9rem;
+  color: #ccc;
+  margin-top: 5px;
 }
 
-.session-item h3 {
+/* Fix old session item styles */
+.session-item {
+  display: none; /* Hide the old style */
+}
+/* --- New Chat Message Styling --- */
+.chat-message-with-pic {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.chat-profile-pic {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-top: 2px;
+}
+.chat-message {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+.chat-sender {
+  font-size: 0.8rem;
+  color: #aaa;
+  margin-bottom: 2px;
+  font-weight: 600;
+}
+.chat-message p {
+  margin-top: 0;
+}
+/* --- Add to bottom of App.css --- */
+
+/* Makes chat sender name clickable */
+.chat-sender.clickable {
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-color: #888;
+}
+.chat-sender.clickable:hover {
+  text-decoration-color: #fff;
+}
+
+/* User Profile Modal Styles */
+.user-profile-modal .profile-details {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+.user-profile-modal .profile-details p {
+  margin: 0;
+  display: flex;
+  justify-content: space-between;
+}
+.user-profile-modal .profile-details p span {
+  color: #ccc;
+  font-weight: 500;
+  text-align: right;
+}
+.user-profile-modal .profile-courses-list {
+  margin: 0;
+  padding-left: 20px;
+}
+.user-profile-modal .profile-courses-list li {
+  color: #ccc;
+  margin-bottom: 5px;
+}
+
+/* --- Add to bottom of App.css --- */
+
+/* Profile Pic Preview in Edit Modal */
+.profile-pic-preview {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid #555;
+  margin-bottom: 10px;
+}
+/* --- Add to bottom of App.css --- */
+
+/* Auth Page Centering Container */
+.auth-page-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 90vh; /* Adjust as needed */
+  padding: 20px;
+}
+
+/* Auth Form Box Styling */
+.auth-form-wrapper {
+  background-color: #2d2d2d;
+  padding: 40px;
+  border-radius: 12px;
+  border: 1px solid #555;
+  width: 100%;
+  max-width: 600px; /* Max width for the form box */
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+}
+
+.auth-form-wrapper h2 {
+  text-align: center;
+  margin-bottom: 30px;
+  color: #fff;
+  border-bottom: 1px solid #555; /* Match modal style */
+  padding-bottom: 15px;
+}
+
+/* Slightly adjust form grid for auth pages */
+.auth-form-wrapper .session-form-detailed {
+  gap: 20px 25px; /* Increase gap slightly */
+}
+
+/* Style the file input */
+.profile-pic-upload {
+  align-items: center; /* Center items vertically */
+  border-bottom: 1px solid #444;
+  padding-bottom: 20px;
+}
+.file-input {
+  border: none;
+  padding: 0;
+  color: #ccc; /* Make text lighter */
+}
+.file-input::file-selector-button {
+  margin-right: 15px;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 4px;
+  background-color: #555;
+  color: #fff;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+.file-input::file-selector-button:hover {
+  background-color: #777;
+}
+
+/* Link to switch between Login/Signup */
+.auth-switch-link {
+  text-align: center;
+  margin-top: 25px;
+  font-size: 0.9rem;
+  color: #aaa;
+}
+.auth-switch-link a {
+  color: #646cff;
+  text-decoration: none;
+}
+.auth-switch-link a:hover {
+  text-decoration: underline;
+}
+
+/* Ensure the Login page also gets centered */
+/* Add .auth-page-container and .auth-form-wrapper to LoginPage.jsx too! */
+/* (We'll do LoginPage next if you want) */
+/* src/App.css */
+h2 {
+  font-size: 2.5rem;
+  margin-top: 0;
+  border-bottom: 1px solid #444;
+  padding-bottom: 10px;
+}
+
+h3 {
   margin: 0;
   font-size: 1.25rem;
+}
+
+button {
+  border-radius: 8px;
+  border: 1px solid transparent;
+  padding: 0.6em 1.2em;
+  font-size: 1em;
+  font-weight: 500;
+  font-family: inherit;
+  background-color: #1a1a1a;
+  cursor: pointer;
+  transition: border-color 0.25s;
+}
+button:hover {
+  border-color: #646cff;
+}
+
+input {
+  font-family: inherit;
+  font-size: 1em;
+  border-radius: 8px;
+  border: 1px solid #555;
+  padding: 0.6em 1.2em;
+  background-color: #2a2a2a;
+  color: #fff;
+}
+
+/* --- Home Page Layout --- */
+.home-layout {
+  display: flex;
+  flex-direction: row;
+  padding: 30px;
+  gap: 30px; /* Space between the columns */
+}
+
+/* --- Left Column: Session List --- */
+.session-list-container {
+  flex: 1; /* This column will take up 1 "part" of the space */
+  max-width: 700px;
+}
+
+/* --- Right Column: Map Placeholder --- */
+.map-placeholder {
+  flex: 1.5; /* This column will take 1.5 "parts" (making it wider) */
+  background-color: #1a1a1a;
+  border: 1px solid #444;
+  border-radius: 12px;
+  padding: 20px;
+  min-height: 80vh; /* Make sure it has height */
+  box-sizing: border-box; /* Ensures padding doesn't break layout */
+}
+
+/* --- Session Form Styling (old one, not used but fine to keep) --- */
+.session-form {
+  display: flex;
+  margin-bottom: 25px;
+  gap: 10px;
+}
+.session-form input {
+  flex-grow: 1;
+  padding: 12px;
+  font-size: 1rem;
+  border: 1px solid #444;
+  background-color: #222;
+  color: #fff;
+  border-radius: 6px; 
+}
+.session-form button {
+  padding: 0 20px;
+  font-size: 1rem;
+  border: none;
+  background-color: #007aff;
+  color: white;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: background-color 0.2s;
+}
+.session-form button:hover {
+  background-color: #0056b3;
+}
+
+
+/* --- Session Item Styling (old one) --- */
+.session-items {
+  display: flex;
+  flex-direction: column;
+  gap: 15px; /* Space between each session item */
+}
+.session-item {
+  display: none; /* Hide the old style */
+}
+
+/* --- Session Page (Chat Page) Styling --- */
+.session-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.chat-box {
+  border: 1px solid #444;
+  background-color: #2a2a2a;
+  height: 400px;
+  overflow-y: auto;
+  padding: 10px;
+  border-radius: 8px;
+  margin-bottom: 15px;
+}
+
+.chat-message {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  margin-bottom: 10px;
+}
+.chat-sender {
+  font-size: 0.8rem;
+  color: #aaa;
+  margin-bottom: 2px;
+}
+.chat-message p {
+  margin: 0;
+  margin-top: 0; /* Cleaned up duplicate */
+  padding: 8px 12px;
+  background-color: #333;
+  border-radius: 10px;
+  display: inline-block;
+}
+.chat-message small {
+  color: #999;
+  margin-left: 10px;
+  font-size: 0.75rem;
+}
+
+.chat-form {
+  display: flex;
+  gap: 10px;
+}
+.chat-form input {
+  flex-grow: 1;
+}
+.chat-form button {
+  background-color: #007aff;
+  color: white;
+  border: none;
+}
+.chat-form button:hover {
+  background-color: #0056b3;
+}
+
+/* --- Modal Styles --- */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: #2d2d2d; /* Use the visually pleasing style */
+  padding: 30px;
+  border-radius: 12px;
+  border: 1px solid #555; /* Use the visually pleasing style */
+  width: 90%;
+  max-width: 600px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+  z-index: 1001;
+}
+.modal-content h2 {
+  margin-top: 0;
+  border-bottom: 1px solid #555;
+  padding-bottom: 15px;
+  color: #fff; /* Use the visually pleasing style */
+  font-weight: 600; /* Use the visually pleasing style */
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 15px;
+  margin-top: 25px;
+}
+.modal-actions.full-width {
+  grid-column: 1 / -1;
+  border-top: 1px solid #444;
+  padding-top: 20px;
+  margin-top: 10px;
+}
+
+.button-secondary {
+  background-color: #555;
+  color: #fff;
+  border: none;
+}
+.button-secondary:hover {
+  background-color: #777;
+}
+
+.modal-error {
+  color: #ff6b6b;
+  font-size: 0.9rem;
+  margin-top: 15px;
+}
+
+/* --- Session Details Modal Content --- */
+.session-details-content {
+  max-height: 40vh;
+  overflow-y: auto;
+  padding-right: 10px; /* for scrollbar */
+}
+.session-description-modal {
+  background-color: #222;
+  padding: 15px;
+  border-radius: 8px;
+  white-space: pre-wrap; /* Preserves line breaks in description */
+}
+
+
+/* --- New Home Page Layout --- */
+.home-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.sign-out-button {
+  background-color: #d9534f;
+  color: white;
+  border: none;
+}
+.sign-out-button:hover {
+  background-color: #c9302c;
+  border-color: #ac2525;
+}
+
+/* --- New Condensed Session Item --- */
+.session-item-condensed {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #282828;
+  padding: 20px;
+  border-radius: 12px;
+  border: 1px solid #444;
+  transition: all 0.2s ease;
+}
+.session-item-condensed:hover {
+  border-color: #646cff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+.session-item-condensed h3 {
+  margin: 0 0 5px 0;
+}
+.session-item-condensed p {
+  margin: 0;
+  color: #aaa;
+}
+.session-item-condensed .session-time-start {
+  font-size: 0.9rem;
+  color: #ccc;
+  margin-top: 5px;
+}
+
+/* --- New Detailed Form (for the modal) --- */
+.session-form-detailed {
+  display: grid;
+  grid-template-columns: 1fr 1fr; /* 2-column grid */
+  gap: 15px 20px; /* Row and column gap */
+}
+
+/* Form group styling for the grid */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.form-group.full-width {
+  grid-column: 1 / -1; /* Make this element span both columns */
+}
+.form-group.half-width {
+  grid-column: auto; /* Default to one column */
+}
+
+.session-form-detailed label {
+  font-weight: 500;
+  font-size: 0.9rem;
+  color: #ccc;
+}
+.session-form-detailed input,
+.session-form-detailed textarea,
+.session-form-detailed select {
+  width: 100%;
+  padding: 12px;
+  font-size: 1rem;
+  border: 1px solid #444;
+  background-color: #222;
+  color: #fff;
+  border-radius: 6px;
+  box-sizing: border-box; /* Important for padding */
+}
+.session-form-detailed textarea {
+  min-height: 80px;
+}
+
+/* New End Session Button */
+.end-session-button {
+  float: right;
+  background-color: #d9534f;
+  color: white;
+  border: none;
+}
+.end-session-button:hover {
+  background-color: #c9302c;
 }
 
 .join-button {
@@ -133,7 +781,83 @@
   font-weight: 500;
   transition: background-color 0.2s;
 }
-
 .join-button:hover {
   background-color: #28a745;
+}
+
+/* --- New Chat Message Styling --- */
+.chat-message-with-pic {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.chat-profile-pic {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-top: 2px;
+}
+.chat-message {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+.chat-sender {
+  font-size: 0.8rem;
+  color: #aaa;
+  margin-bottom: 2px;
+  font-weight: 600;
+}
+.chat-message p {
+  margin-top: 0;
+}
+/* --- Add to bottom of App.css --- */
+
+/* Makes chat sender name clickable */
+.chat-sender.clickable {
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-color: #888;
+}
+.chat-sender.clickable:hover {
+  text-decoration-color: #fff;
+}
+
+/* User Profile Modal Styles */
+.user-profile-modal .profile-details {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+.user-profile-modal .profile-details p {
+  margin: 0;
+  display: flex;
+  justify-content: space-between;
+}
+.user-profile-modal .profile-details p span {
+  color: #ccc;
+  font-weight: 500;
+  text-align: right;
+}
+.user-profile-modal .profile-courses-list {
+  margin: 0;
+  padding-left: 20px;
+}
+.user-profile-modal .profile-courses-list li {
+  color: #ccc;
+  margin-bottom: 5px;
+}
+
+/* --- Add to bottom of App.css --- */
+
+/* Profile Pic Preview in Edit Modal */
+.profile-pic-preview {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid #555;
+  margin-bottom: 10px;
 }

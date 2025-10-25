@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>User Profile</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #111, #333);
+      color: #fff;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+      margin: 0;
+      padding: 20px;
+      position: relative;
+    }
+
+    /* Profile card */
+    .profile-container {
+      background-color: #222;
+      border: 3px solid #bb0000;
+      border-radius: 15px;
+      padding: 50px 40px;
+      width: 420px;
+      max-width: 95%;
+      display: flex;
+      flex-direction: column;
+      gap: 30px;
+      margin-top: 50px;
+    }
+
+    #profile-pic {
+      width: 180px;
+      height: 180px;
+      border-radius: 50%;
+      border: 4px solid #bb0000;
+      object-fit: cover;
+      cursor: pointer;
+      align-self: center;
+      transition: 0.3s;
+    }
+
+    #profile-pic:hover {
+      transform: scale(1.05);
+      opacity: 0.9;
+    }
+
+    .hint {
+      font-size: 13px;
+      color: #ccc;
+      text-align: center;
+      margin-top: 5px;
+    }
+
+    .section {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .label {
+      font-weight: bold;
+      color: #bb0000;
+      font-size: 16px;
+    }
+
+    .editable {
+      color: #fff;
+      padding: 3px 5px;
+      border-bottom: 1px dashed #aaa;
+      cursor: text;
+      min-width: 60px;
+      transition: 0.2s;
+    }
+
+    .editable:focus {
+      outline: none;
+      border-bottom: 2px solid #bb0000;
+      background-color: #330000;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Profile card -->
+  <div class="profile-container">
+    <img id="profile-pic" src="https://i.pinimg.com/originals/73/83/4b/73834b0cfd3f4cf3f893ececab22a258.jpg" alt="Profile Picture">
+    <div class="hint">Click to change picture</div>
+
+    <!-- Name -->
+    <div class="section">
+      <div class="label">Name</div>
+      <span id="name-edit" class="editable" contenteditable="true">Skyler Williams</span>
+    </div>
+
+    <!-- Major -->
+    <div class="section">
+      <div class="label">Major</div>
+      <span id="major-edit" class="editable" contenteditable="true">CSE</span>
+    </div>
+
+    <!-- Classes -->
+    <div class="section">
+      <div class="label">Classes</div>
+      <span id="classes-edit" class="editable" contenteditable="true">ECE 2060, ENG 1020</span>
+    </div>
+  </div>
+
+  <input type="file" id="profile-input" accept="image/*" style="display:none;">
+
+  <script src="profile.js"></script>
+  <script>
+    const userProfile = new Profile(
+      'Skyler Williams',
+      'CSE',
+      ['ECE 2060', 'ENG 1020'],
+      'https://i.pinimg.com/originals/73/83/4b/73834b0cfd3f4cf3f893ececab22a258.jpg'
+    );
+
+    const img = document.getElementById('profile-pic');
+    const fileInput = document.getElementById('profile-input');
+    const nameEdit = document.getElementById('name-edit');
+    const majorEdit = document.getElementById('major-edit');
+    const classesEdit = document.getElementById('classes-edit');
+
+    img.addEventListener('click', () => fileInput.click());
+
+    fileInput.addEventListener('change', () => {
+      const file = fileInput.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          userProfile.picture = e.target.result;
+          img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    nameEdit.addEventListener('input', () => userProfile.name = nameEdit.textContent);
+    majorEdit.addEventListener('input', () => userProfile.major = majorEdit.textContent);
+    classesEdit.addEventListener('input', () => {
+      userProfile.classes = classesEdit.textContent.split(',').map(c => c.trim()).filter(c => c);
+    });
+  </script>
+
+</body>
+</html>

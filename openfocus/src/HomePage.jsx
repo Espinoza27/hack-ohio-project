@@ -1,19 +1,45 @@
 // src/HomePage.jsx
-import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { db } from './firebase'; 
-import { collection, addDoc, getDocs } from 'firebase/firestore'; 
+import React, { useState, useEffect, useRef } from 'react';
+import { db, auth } from './firebase'; 
+import { collection, getDocs } from 'firebase/firestore'; 
+import { signOut } from 'firebase/auth';
+import EditProfileModal from './EditProfileModal';
+
+import CreateSessionModal from './CreateSessionModal';
+import SessionDetailsModal from './SessionDetailsModal';
+
+// Import the local campus map image
+import campusMap from './assets/campusMap.png';
 
 const HomePage = () => {
-  const [sessions, setSessions] = useState([]); 
-  const [newSessionTopic, setNewSessionTopic] = useState(''); 
+  const [sessions, setSessions] = useState([]);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [selectedSession, setSelectedSession] = useState(null); // For the details modal
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const canvasRef = useRef(null);
+  const [fakeUsers] = useState([
+    { x: 100, y: 150, capacity: 30 },
+    { x: 300, y: 200, capacity: 60 },
+    { x: 500, y: 100, capacity: 40 }
+  ]);
 
-  const fetchSessions = async () => {
-    const querySnapshot = await getDocs(collection(db, 'sessions'));
-    const sessionsList = querySnapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    }));
+// Replace your old fetchSessions function with this
+const fetchSessions = async () => {
+  // Get the current time
+  const now = new Date(); 
+
+  // Get all sessions from the database
+  const querySnapshot = await getDocs(collection(db, 'sessions'));
+
+    const sessionsList = querySnapshot.docs
+      .map(doc => ({ id: doc.id, ...doc.data() }))
+      .filter(session => !session.endTime || (session.endTime.seconds * 1000) > now.getTime())
+      .sort((a, b) => {
+        if (!a.startTime) return 1;
+        if (!b.startTime) return -1;
+        return a.startTime.seconds - b.startTime.seconds;
+      });
+
     setSessions(sessionsList);
   };
 
@@ -21,61 +47,131 @@ const HomePage = () => {
     fetchSessions();
   }, []);
 
-  const handleCreateSession = async (e) => {
-    e.preventDefault(); 
-    if (newSessionTopic.trim() === '') return; 
+  // Draw heatmap overlay
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    try {
-      const docRef = await addDoc(collection(db, 'sessions'), {
-        topic: newSessionTopic,
-        createdAt: new Date()
-      });
-      
-      console.log("Document written with ID: ", docRef.id);
-      setNewSessionTopic(''); 
-      fetchSessions(); 
-    } catch (e) {
-      console.error("Error adding document: ", e);
-    }
+    fakeUsers.forEach(user => {
+      const alpha = Math.min(Math.max(user.capacity / 100, 0), 1);
+      const gradient = ctx.createRadialGradient(user.x, user.y, 0, user.x, user.y, 50);
+      gradient.addColorStop(0, `rgba(255,0,0,${alpha})`);
+      gradient.addColorStop(1, 'rgba(255,0,0,0)');
+      ctx.fillStyle = gradient;
+      ctx.fillRect(user.x - 50, user.y - 50, 100, 100);
+    });
+  }, [fakeUsers]);
+
+  const handleSignOut = () => {
+    signOut(auth).catch(error => console.error("Sign out error:", error));
+  };
+
+  const handleClick = (e) => {
+    const rect = e.target.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    console.log(`Clicked coordinates: x=${x}, y=${y}`);
   };
 
   return (
-    // This is the new 2-column layout container
-    <div className="home-layout">
-      
-      {/* --- Column 1: Session List --- */}
-      <div className="session-list-container">
-        <h2>Study Sessions</h2>
+    <>
+      <div className="home-layout">
+        {/* --- Column 1: Session List --- */}
+        <div className="session-list-container">
+          <div className="home-header">
+            <h2>Study Sessions</h2>
+            <button onClick={handleSignOut} className="sign-out-button">
+              Sign Out
+            </button>
+          </div>
 
-        <form onSubmit={handleCreateSession} className="session-form">
-          <input
-            type="text"
-            value={newSessionTopic}
-            onChange={(e) => setNewSessionTopic(e.target.value)}
-            placeholder="New session topic (e.g., 'Chem 1210 Midterm')"
-          />
-          <button type="submit">Create</button>
-        </form>
+         <button 
+  className="create-button-full" 
+  style={{ 
+    width: '100%', 
+    marginBottom: '25px', 
+    backgroundColor: '#28a745', // green
+    color: 'white',             // text color
+    border: 'none',
+    padding: '10px',
+    fontSize: '16px',
+    cursor: 'pointer',
+    borderRadius: '5px'
+  }}
+  onClick={() => setIsCreateModalOpen(true)}
+>
+  + Create New Session
+</button>
 
-        <div className="session-items">
-          {sessions.map(session => (
-            <div key={session.id} className="session-item">
-              <h3>{session.topic}</h3>
-              <Link to={`/session/${session.id}`} className="join-button">
-                Join
-              </Link>
-            </div>
-          ))}
+          <div className="session-items">
+            {sessions.map(session => (
+              <div key={session.id} className="session-item-condensed">
+                <div>
+                  <h3>{session.topic}</h3>
+                  <p className="session-location">{session.location}</p>
+                  {session.startTime?.seconds && (
+                    <p className="session-time-start">
+                      <strong>Starts:</strong> {new Date(session.startTime.seconds * 1000).toLocaleString()}
+                    </p>
+                  )}
+                </div>
+                <button 
+                  className="join-button" 
+                  onClick={() => setSelectedSession(session)}
+                >
+                  Details
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* --- Column 2: Interactive Campus Map --- */}
+        <div className="map-container" style={{ flex: 1 }}>
+          <h3>Campus Map</h3>
+          <div style={{ position: 'relative', width: 600, height: 400 }}>
+            <img
+              src={campusMap}
+              alt="Campus Map"
+              style={{ width: '100%', height: '100%', position: 'absolute', top: 0, left: 0 }}
+              onClick={handleClick}
+            />
+            <canvas
+              ref={canvasRef}
+              width={600}
+              height={400}
+              style={{ position: 'absolute', top: 0, left: 0 }}
+            />
+          </div>
         </div>
       </div>
 
-      {/* --- Column 2: Map Placeholder --- */}
-      <div className="map-placeholder">
-        <h3>Campus Map</h3>
-        <p>Your interactive map will go here.</p>
-      </div>
+      {/* --- Modals --- */}
+      {isCreateModalOpen && (
+        <CreateSessionModal 
+          onClose={() => setIsCreateModalOpen(false)}
+          onSessionCreated={fetchSessions}
+        />
+      )}
 
-    </div>
+      {selectedSession && (
+        <SessionDetailsModal
+          session={selectedSession}
+          onClose={() => setSelectedSession(null)}
+        />
+      )}
+      {/* --- ADD THIS --- */}
+      {isEditModalOpen && (
+        <EditProfileModal
+        onClose={() => setIsEditModalOpen(false)}
+        onProfileUpdated={() => {
+      // You could refresh data here if needed, but for now just close
+  }}
+  />
+  )}
+{/* --- END OF ADDITION --- */}
+    </>
   );
 };
 

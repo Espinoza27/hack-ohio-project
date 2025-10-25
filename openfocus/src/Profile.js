@@ -6,6 +6,7 @@ class Profile {
     this.classes = classes;  // Array of classes like ["ECE 2060", "MATH 2410"]
   }
 
+
   // Add a class
   addClass(className) {
     if (!this.classes.includes(className)) {
@@ -31,5 +32,13 @@ class Profile {
       classes: this.classes
     };
   }
+
 }
+
+// Profile.js
+export const userProfile = new Profile(
+  'Skyler Williams',
+  'CSE',
+  ['ECE 2060', 'ENG 1020']
+);
 

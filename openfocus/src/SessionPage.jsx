@@ -1,27 +1,27 @@
 // src/SessionPage.jsx
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { rtDB } from './firebase'; // <-- Import Realtime Database
 import { ref, onValue, push, serverTimestamp } from 'firebase/database'; // <-- Import chat functions
+import { userProfile } from "./Profile.js"; // Adjust path if needed
+
+const defaultPic = 'https://i.pinimg.com/originals/73/83/4b/73834b0cfd3f4cf3f893ececab22a258.jpg';
 
 const SessionPage = () => {
   const { sessionId } = useParams(); // Get session ID from URL
+  const navigate = useNavigate();
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
 
-  // Set up a reference to the chat room for this specific session
-  const messagesRef = ref(rtDB, `chats/${sessionId}`);
-
-  // This hook sets up the real-time listener
+  // Fetch messages in real-time
   useEffect(() => {
-    // onValue() listens for changes and fires every time data is added/changed
-    onValue(messagesRef, (snapshot) => {
+    const messagesRef = ref(rtDB, `chats/${sessionId}`);
+    const unsubscribe = onValue(messagesRef, (snapshot) => {
       const data = snapshot.val();
       if (data) {
-        // Convert the messages object into an array
-        const messagesList = Object.keys(data).map(key => ({
+        const messagesList = Object.keys(data).map((key) => ({
           id: key,
-          ...data[key]
+          ...data[key],
         }));
         setMessages(messagesList);
       } else {
@@ -29,25 +29,23 @@ const SessionPage = () => {
       }
     });
 
-    // Clean up the listener when the component unmounts
     return () => {
-      onValue(messagesRef, () => {});
+      if (typeof unsubscribe === 'function') unsubscribe();
     };
-  }, [sessionId]); // Re-run if the sessionId changes
+  }, [sessionId]);
 
-  // This function runs when you submit the chat form
+  // Send a new chat message
   const handleSendMessage = (e) => {
     e.preventDefault();
     if (newMessage.trim() === '') return;
 
-    // Push a new message to the Realtime Database
+    const messagesRef = ref(rtDB, `chats/${sessionId}`);
     push(messagesRef, {
       text: newMessage,
       timestamp: serverTimestamp(),
-      // You can add a user's name here later
     });
-    
-    setNewMessage(''); // Clear the input box
+
+    setNewMessage('');
   };
 
   return (
@@ -55,30 +53,35 @@ const SessionPage = () => {
       <h2>Study Session: {sessionId}</h2>
       
       {/* --- Chat Messages Display --- */}
-      <div style={{ border: '1px solid #ccc', height: '300px', overflowY: 'auto', padding: '10px' }}>
+      <div className="chat-box">
         {messages.map(msg => (
-          <div key={msg.id}>
+          <div key={msg.id} className="chat-message">
             <p>
               {msg.text} 
-              <small style={{ color: 'gray', marginLeft: '10px' }}>
-                {/* Format the timestamp to be readable */}
+              <small>
                 {new Date(msg.timestamp).toLocaleTimeString()}
               </small>
-            </p>
+            </div>
           </div>
         ))}
       </div>
 
-      {/* --- New Message Form --- */}
-      <form onSubmit={handleSendMessage}>
+
+      {/* Send Message */}
+      <form onSubmit={handleSendMessage} style={{ display: 'flex', gap: '10px', marginTop: '15px' }}>
         <input
           type="text"
           value={newMessage}
           onChange={(e) => setNewMessage(e.target.value)}
           placeholder="Type your message..."
         />
-        <button type="submit">Send</button>
-      </form>
+        <button 
+          type="submit"
+          style={{ padding: '8px 16px', borderRadius: '5px', border: 'none', backgroundColor: '#bb0000', color: '#fff', cursor: 'pointer' }}
+        >
+          ← Back to Home
+        </button>
+      </div>
     </div>
   );
 };
