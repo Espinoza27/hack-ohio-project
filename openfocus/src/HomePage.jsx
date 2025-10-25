@@ -46,5 +46,5 @@ const HomePage = () => {
             </main>
         </div>
     );
-};</section>
+};
 export default HomePage;
