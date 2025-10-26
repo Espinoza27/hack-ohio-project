@@ -7,10 +7,11 @@ import { collection, addDoc } from 'firebase/firestore';
 const toLocalISOString = (date) => {
   if (!date) return '';
   const tzOffset = date.getTimezoneOffset() * 60000;
-  return new Date(date.getTime() - tzOffset).toISOString().slice(0, 16);
+  const localISOTime = new Date(date.getTime() - tzOffset).toISOString().slice(0, 16);
+  return localISOTime;
 };
 
-// Helper function to get min/max for START time input
+// Helper function to get min/max for START time input (now to 1 year ahead)
 const getMinMaxStartTimes = () => {
   const now = new Date();
   const oneYearFromNow = new Date();
@@ -35,11 +36,16 @@ const CreateSessionModal = ({ onClose, onSessionCreated }) => {
     if (!startTime) return { minEndTime: '', maxEndTime: '' };
     const startDate = new Date(startTime);
     const minEndDate = new Date(startDate);
-    const maxEndDate = new Date(startDate.getTime() + 24 * 60 * 60 * 1000);
-    return { minEndTime: toLocalISOString(minEndDate), maxEndTime: toLocalISOString(maxEndDate) };
+    const maxEndDate = new Date(startDate.getTime() + 24 * 60 * 60 * 1000); // within 24 hours
+
+    return {
+      minEndTime: toLocalISOString(minEndDate),
+      maxEndTime: toLocalISOString(maxEndDate),
+    };
   };
   const { minEndTime, maxEndTime } = getEndTimeConstraints();
 
+  // Snap a Date object to the nearest 30-minute interval
   const roundTo30Minutes = (date) => {
     const ms = 1000 * 60 * 30;
     return new Date(Math.ceil(date.getTime() / ms) * ms);
@@ -48,16 +54,24 @@ const CreateSessionModal = ({ onClose, onSessionCreated }) => {
   const handleStartTimeChange = (e) => {
     const newStart = e.target.value;
     setStartTime(newStart);
+
     if (newStart) {
       const startDate = new Date(newStart);
-      const defaultEnd = new Date(startDate.getTime() + 8 * 60 * 60 * 1000);
+      const defaultEnd = new Date(startDate.getTime() + 8 * 60 * 60 * 1000); // +8 hours
       setEndTime(toLocalISOString(roundTo30Minutes(defaultEnd)));
-    } else setEndTime('');
+    } else {
+      setEndTime('');
+    }
   };
 
   const handleEndTimeChange = (e) => {
     const newEnd = e.target.value;
-    setEndTime(newEnd ? toLocalISOString(roundTo30Minutes(new Date(newEnd))) : '');
+    if (newEnd) {
+      const date = new Date(newEnd);
+      setEndTime(toLocalISOString(roundTo30Minutes(date)));
+    } else {
+      setEndTime('');
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -82,11 +96,27 @@ const CreateSessionModal = ({ onClose, onSessionCreated }) => {
     let endTimeDate = endTime ? new Date(endTime) : new Date(startTimeDate);
     if (!endTime) endTimeDate.setHours(23, 59, 59, 999);
 
-    if (endTimeDate <= startTimeDate) {
-      setError('End time must be after the start time.');
-      setLoading(false);
-      return;
+    // --- End Time Logic ---
+    if (endTime) {
+      endTimeDate = new Date(endTime);
+      if (endTimeDate <= startTimeDate) {
+        setError('End time must be after the start time.');
+        setLoading(false);
+        return;
+      }
+
+      const maxAllowedEndTime = new Date(startTimeDate.getTime() + 24 * 60 * 60 * 1000);
+      if (endTimeDate > maxAllowedEndTime) {
+        setError('End time cannot be more than 24 hours after the start time.');
+        setLoading(false);
+        return;
+      }
+    } else {
+      // Default: 11:59:59 PM same day
+      endTimeDate = new Date(startTimeDate);
+      endTimeDate.setHours(23, 59, 59, 999);
     }
+    // --- End of End Time Logic ---
 
     try {
       await addDoc(collection(db, 'sessions'), {
@@ -96,7 +126,7 @@ const CreateSessionModal = ({ onClose, onSessionCreated }) => {
         floor,
         wing,
         startTime: startTimeDate,
-        endTime: endTimeDate,
+        endTime: endTimeDate, // Saves the calculated/chosen end time
         createdAt: new Date(),
         status: 'active',
         hostId: user.uid,
@@ -144,12 +174,35 @@ const CreateSessionModal = ({ onClose, onSessionCreated }) => {
           </div>
           <div className="form-group half-width">
             <label>Start Time</label>
-            <input type="datetime-local" value={startTime} onChange={handleStartTimeChange} min={minStartTime} max={maxStartTime} step={900} required />
-          </div>
+            <input
+            type="datetime-local"
+            value={startTime}
+            onChange={handleStartTimeChange}
+            min={minStartTime}
+            max={maxStartTime}
+            step={900} // ⬅️ 15-minute intervals
+            required
+            />
+            </div>
+
+
+          {/* End Time */}
           <div className="form-group half-width">
             <label>End Time (Optional)</label>
-            <input type="datetime-local" value={endTime} onChange={handleEndTimeChange} min={minEndTime} max={maxEndTime} disabled={!startTime} step={1800} />
-            {!endTime && startTime && <small className="form-help-text">Defaults to 11:59 PM on the same day if left blank.</small>}
+            <input
+              type="datetime-local"
+              value={endTime}
+              onChange={handleEndTimeChange}
+              min={minEndTime}
+              max={maxEndTime}
+              disabled={!startTime}
+              step={1800} // 30-minute intervals
+            />
+            {!endTime && startTime && (
+              <small className="form-help-text">
+                Defaults to 11:59 PM on the same day if left blank.
+              </small>
+            )}
           </div>
 
           {error && <p className="modal-error full-width">{error}</p>}
