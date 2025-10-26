@@ -912,3 +912,24 @@ input {
     border-radius: 8px;
     z-index: 10; /* Ensure it is above the map */
 }
+/* --- Add to bottom of App.css --- */
+
+/* Minor cleanup for the detailed location on the home page */
+.session-location {
+  margin: 0;
+  color: #ccc;
+  font-size: 0.95rem;
+}
+
+.session-location-details {
+  margin: 0 0 5px 0;
+  color: #aaa;
+  font-size: 0.85rem;
+}
+
+.form-help-text {
+  font-size: 0.75rem;
+  color: #aaa;
+  margin-top: 5px;
+  display: block;
+}

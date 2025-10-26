@@ -40,7 +40,11 @@ const SessionDetailsModal = ({ session, onClose }) => {
         <h2>{session.topic}</h2>
         
         <div className="session-details-content">
-          <p><strong>Location:</strong> {session.location}</p>
+          <p>
+            <strong>Location:</strong> {session.location}, {session.floor}
+            <br/>
+            <span style={{marginLeft: '70px', fontSize: '0.9em', color: '#bbb'}}>{session.wing}</span>
+            </p>
           <p><strong>Starts:</strong> {session.startTime?.seconds && new Date(session.startTime.seconds * 1000).toLocaleString()}</p>
           
           {session.endTime?.seconds && (

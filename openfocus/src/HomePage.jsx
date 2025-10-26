@@ -123,41 +123,42 @@ export default function HomePage() {
           + Create New Session
         </button>
 
-        <div className="session-items">
-          {sessions.map(session => (
-            <div key={session.id} className="session-item-condensed" style={{ marginBottom: '15px' }}>
-              <h3>{session.topic}</h3>
-              <p className="session-location">{session.location}</p>
-              {session.startTime?.seconds && (
-                <p>
-                  <strong>Starts:</strong> {new Date(session.startTime.seconds * 1000).toLocaleString()}
-                </p>
-              )}
-              <button className="join-button" onClick={() => setSelectedSession(session)}>
-                Details
-              </button>
-            </div>
-          ))}
-        </div>
-      </div>
+          {/* --- The main list display logic is here --- */}
+          <div className="session-items">
+            {sessions.map(session => {
+              const hasJoined = userJoinedSessions[session.id];
+              const joinCount = sessionJoinCounts[session.id] || 0;
 
-      {/* Right column: campus map with hotspots */}
-      <div className="map-container" style={{ flex: 1 }}>
-        <h3>Campus Map</h3>
-
-        {/* Legend */}
-        <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-            <div style={{ width: '20px', height: '20px', backgroundColor: 'rgba(0,255,0,0.4)' }} />
-            <span>Not busy</span>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-            <div style={{ width: '20px', height: '20px', backgroundColor: 'rgba(255,255,0,0.4)' }} />
-            <span>Moderately busy</span>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-            <div style={{ width: '20px', height: '20px', backgroundColor: 'rgba(255,0,0,0.4)' }} />
-            <span>Very busy</span>
+              return (
+                <div key={session.id} className="session-item-condensed">
+                  <div>
+                    <h3>{session.topic}</h3>
+                    <p className="session-location">{session.location}</p>
+                    {session.startTime?.seconds && (
+                      <p className="session-time-start">
+                        <strong>Starts:</strong> {new Date(session.startTime.seconds * 1000).toLocaleString()}
+                      </p>
+                    )}
+                    <p className="session-time-start" style={{marginTop: '5px', color: '#646cff'}}>
+                       {joinCount} joined
+                    </p>
+                  </div>
+                  {/* --- CONDITIONAL BUTTON RENDERING --- */}
+                  {hasJoined ? (
+                    <Link to={`/session/${session.id}`} className="join-button">
+                      Join
+                    </Link>
+                  ) : (
+                    <button 
+                      className="join-button" 
+                      onClick={() => setSelectedSession(session)}
+                    >
+                      Details
+                    </button>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
 
