@@ -251,6 +251,7 @@ input {
   border-color: #ac2525;
 }
 
+
 /* --- New Condensed Session Item --- */
 .session-item-condensed {
   display: flex;
@@ -278,6 +279,15 @@ input {
   font-size: 0.9rem;
   color: #ccc;
   margin-top: 5px;
+}
+/* REPLACING the original .create-button-full */
+.create-button-full {
+  background-color: #535bf2; /* New Deep Purple Color */
+  color: white;
+  border: none;
+}
+.create-button-full:hover {
+  background-color: #434cde; /* Slightly darker purple on hover */
 }
 
 /* Fix old session item styles */
