@@ -103,6 +103,25 @@ const SessionPage = () => {
         )}
 
         <h2>{sessionData.topic}</h2> {/* Display the actual topic */}
+        <div className="session-info-card">
+          <p className="session-location-display">
+            <strong>Location:</strong> {sessionData.location}
+          </p>
+          <p className="session-description-display">
+            <strong>Description:</strong> {sessionData.description || 'No description provided.'}
+          </p>
+          <p className="session-time-display">
+            <strong>Starts:</strong> {sessionData.startTime?.seconds && new Date(sessionData.startTime.seconds * 1000).toLocaleString()}
+          </p>
+          {/* Only display end time if it exists in the data */}
+          {sessionData.endTime?.seconds && (
+            <p className="session-time-display">
+              <strong>Ends:</strong> {new Date(sessionData.endTime.seconds * 1000).toLocaleString()}
+            </p>
+          )}
+        </div>
+
+        <h3>Live Chat:</h3>
 
         {/* --- Chat Messages Display --- */}
         <div className="chat-box">
