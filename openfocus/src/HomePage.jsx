@@ -3,6 +3,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { db, auth } from './firebase';
 import { collection, getDocs } from 'firebase/firestore';
 import { signOut } from 'firebase/auth';
+import { Link } from 'react-router-dom';
 import EditProfileModal from './EditProfileModal';
 import CreateSessionModal from './CreateSessionModal';
 import SessionDetailsModal from './SessionDetailsModal';
@@ -15,19 +16,20 @@ export default function HomePage() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [selectedSession, setSelectedSession] = useState(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [tick, setTick] = useState(0);
 
-  // Initial hotspots including the two new zones
+  const [userJoinedSessions, setUserJoinedSessions] = useState({});
+  const [sessionJoinCounts, setSessionJoinCounts] = useState({});
+
   const initialHotspots = [
     { x: 500, y: 210, people: 30 },
     { x: 325, y: 120, people: 100 },
     { x: 260, y: 220, people: 200 },
-    { x: 380, y: 260, people: 50 },  // new zone 1
-    { x: 210, y: 40, people: 80 },   // new zone 2
+    { x: 380, y: 260, people: 50 },
+    { x: 210, y: 40, people: 80 }
   ];
   const [hotspots, setHotspots] = useState(initialHotspots);
-  const [tick, setTick] = useState(0);
 
-  // Fetch sessions from Firestore
   const fetchSessions = async () => {
     const now = new Date();
     const querySnapshot = await getDocs(collection(db, 'sessions'));
@@ -46,12 +48,11 @@ export default function HomePage() {
     fetchSessions();
   }, []);
 
-  // Simulate people movement (0–800)
   useEffect(() => {
     const interval = setInterval(() => {
       setHotspots(prev =>
         prev.map(h => {
-          const change = Math.floor(Math.random() * 201) - 100; // ±100
+          const change = Math.floor(Math.random() * 201) - 100;
           let newCount = h.people + change;
           if (newCount < 0) newCount = 0;
           if (newCount > 800) newCount = 800;
@@ -60,21 +61,20 @@ export default function HomePage() {
       );
       setTick(prev => prev + 1);
     }, 2000);
-
     return () => clearInterval(interval);
   }, []);
 
-  // Draw hotspots with radius scaling
   useEffect(() => {
     const canvas = canvasRef.current;
+    if (!canvas) return;
     const ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     hotspots.forEach(h => {
       let color;
-      if (h.people <= 50) color = 'rgba(0,255,0,0.4)'; // green
-      else if (h.people <= 400) color = 'rgba(255,255,0,0.4)'; // yellow
-      else color = 'rgba(255,0,0,0.4)'; // red
+      if (h.people <= 50) color = 'rgba(0,255,0,0.4)';
+      else if (h.people <= 400) color = 'rgba(255,255,0,0.4)';
+      else color = 'rgba(255,0,0,0.4)';
 
       const minRadius = 20;
       const maxRadius = 100;
@@ -123,43 +123,45 @@ export default function HomePage() {
           + Create New Session
         </button>
 
-          {/* --- The main list display logic is here --- */}
-          <div className="session-items">
-            {sessions.map(session => {
-              const hasJoined = userJoinedSessions[session.id];
-              const joinCount = sessionJoinCounts[session.id] || 0;
+        <div className="session-items">
+          {sessions.map(session => {
+            const hasJoined = userJoinedSessions[session.id];
+            const joinCount = sessionJoinCounts[session.id] || 0;
 
-              return (
-                <div key={session.id} className="session-item-condensed">
-                  <div>
-                    <h3>{session.topic}</h3>
-                    <p className="session-location">{session.location}</p>
-                    {session.startTime?.seconds && (
-                      <p className="session-time-start">
-                        <strong>Starts:</strong> {new Date(session.startTime.seconds * 1000).toLocaleString()}
-                      </p>
-                    )}
-                    <p className="session-time-start" style={{marginTop: '5px', color: '#646cff'}}>
-                       {joinCount} joined
+            return (
+              <div key={session.id} className="session-item-condensed">
+                <div>
+                  <h3>{session.topic}</h3>
+                  <p className="session-location">{session.location}</p>
+                  {session.startTime?.seconds && (
+                    <p className="session-time-start">
+                      <strong>Starts:</strong> {new Date(session.startTime.seconds * 1000).toLocaleString()}
                     </p>
-                  </div>
-                  {/* --- CONDITIONAL BUTTON RENDERING --- */}
-                  {hasJoined ? (
-                    <Link to={`/session/${session.id}`} className="join-button">
-                      Join
-                    </Link>
-                  ) : (
-                    <button 
-                      className="join-button" 
-                      onClick={() => setSelectedSession(session)}
-                    >
-                      Details
-                    </button>
                   )}
+                  <p className="session-time-start" style={{ marginTop: '5px', color: '#646cff' }}>
+                    {joinCount} joined
+                  </p>
                 </div>
-              );
-            })}
-          </div>
+                {hasJoined ? (
+                  <Link to={`/session/${session.id}`} className="join-button">Join</Link>
+                ) : (
+                  <button className="join-button" onClick={() => setSelectedSession(session)}>Details</button>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Right column: map */}
+      <div className="map-container" style={{ flex: 1 }}>
+        <h3>Campus Map</h3>
+
+        {/* Legend at top, stacked */}
+        <div style={{ marginBottom: '10px' }}>
+          <p style={{ color: 'green', margin: '2px 0' }}>Green = Not Busy</p>
+          <p style={{ color: 'yellow', margin: '2px 0' }}>Yellow = Moderately Busy</p>
+          <p style={{ color: 'red', margin: '2px 0' }}>Red = Very Busy</p>
         </div>
 
         <div style={{ position: 'relative', width: 600, height: 400 }}>
@@ -173,11 +175,7 @@ export default function HomePage() {
         </div>
 
         <div style={{ marginTop: 10 }}>
-          {hotspots.map((h, i) => (
-            <p key={i}>
-              Zone {i + 1}: {h.people} people
-            </p>
-          ))}
+          {hotspots.map((h, i) => <p key={i}>Zone {i + 1}: {h.people} people</p>)}
           <p>Simulation ticks: {tick}</p>
         </div>
       </div>
