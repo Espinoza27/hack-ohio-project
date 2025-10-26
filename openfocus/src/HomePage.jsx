@@ -190,7 +190,9 @@ export default function HomePage() {
                     </p>
                   </div>
                   {hasJoined ? (
-                    <Link to={`/session/{session.id}`} className="join-button">Join</Link>
+                    <Link to={`/session/${session.id}`} className="join-button">
+                      Join
+                    </Link>
                   ) : (
                     <button className="join-button" onClick={() => setSelectedSession(session)}>
                       Details
