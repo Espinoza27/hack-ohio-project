@@ -1,23 +1,29 @@
 // src/HomePage.jsx
 import React, { useEffect, useRef, useState } from 'react';
 import { db, auth } from './firebase';
-import { collection, getDocs, writeBatch, Timestamp, query, where } from 'firebase/firestore'; // Added writeBatch, query, where, Timestamp
+import { collection, getDocs, writeBatch, Timestamp, query, where } from 'firebase/firestore'; 
 import { signOut } from 'firebase/auth';
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router-dom'; // Correct single import for Link
 import EditProfileModal from './EditProfileModal';
 import CreateSessionModal from './CreateSessionModal';
 import SessionDetailsModal from './SessionDetailsModal';
-import { Link } from 'react-router-dom'; // Added Link
 import campusMap from './assets/campusMap.png';
 
 export default function HomePage() {
   const canvasRef = useRef(null);
   
-  // --- MISSING STATE DECLARATIONS ---
+  // --- STATE DECLARATIONS ---
   const [sessions, setSessions] = useState([]);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [selectedSession, setSelectedSession] = useState(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  
+  // --- MISSING SESSION STATE ---
+  const [userJoinedSessions, setUserJoinedSessions] = useState({}); // Tracking user joins
+  const [sessionJoinCounts, setSessionJoinCounts] = useState({});   // Tracking total joins
+  const [tick, setTick] = useState(0); // Added missing tick state
+  const currentUser = auth.currentUser; // Get current user for join checks
+  // --- END MISSING SESSION STATE ---
 
   const initialHotspots = [
     { x: 500, y: 210, people: 30 },
@@ -28,11 +34,35 @@ export default function HomePage() {
   ];
   const [hotspots, setHotspots] = useState(initialHotspots);
 
-  // Fetch sessions from Firestore
-  const fetchSessions = async () => {
-    const now = new Date();
-    const querySnapshot = await getDocs(collection(db, 'sessions'));
-    const sessionsList = querySnapshot.docs
+
+  // --- Client-side Cleanup Function ---
+  const cleanupExpiredSessions = async () => {
+    const now = Timestamp.now();
+    const expiredQuery = query(
+      collection(db, 'sessions'),
+      where('endTime', '<', now)
+    );
+    const snapshot = await getDocs(expiredQuery);
+    if (snapshot.empty) return;
+    
+    const batch = writeBatch(db);
+    snapshot.docs.forEach(sessionDoc => {
+      batch.delete(sessionDoc.ref);
+    });
+    await batch.commit();
+  };
+  // --- END Client-side Cleanup Function ---
+
+
+  // --- COMBINED FETCH FUNCTION (Sessions, Joins, Counts) ---
+  const fetchSessionData = async () => {
+    await cleanupExpiredSessions(); // Run cleanup first
+    
+    const now = new Date(); 
+
+    // 1. Fetch ALL Sessions
+    const sessionsSnapshot = await getDocs(collection(db, 'sessions'));
+    const allSessions = sessionsSnapshot.docs
       .map(doc => ({ id: doc.id, ...doc.data() }))
       .filter(session => !session.endTime || (session.endTime.seconds * 1000) > now.getTime());
       
@@ -65,8 +95,13 @@ export default function HomePage() {
 
   useEffect(() => {
     fetchSessionData();
-  }, []);
+    // Re-fetch when the current user changes (e.g., after login/sign up)
+    const unsubscribe = auth.onAuthStateChanged(() => fetchSessionData());
+    return () => unsubscribe();
+  }, [currentUser]);
 
+
+  // Simulate people movement (0–800)
   useEffect(() => {
     const interval = setInterval(() => {
       setHotspots(prev =>
@@ -83,8 +118,11 @@ export default function HomePage() {
     return () => clearInterval(interval);
   }, []);
 
+  // Draw hotspots with radius scaling
   useEffect(() => {
     const canvas = canvasRef.current;
+    if (!canvas) return;
+    
     const ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -103,7 +141,6 @@ export default function HomePage() {
       gradient.addColorStop(1, 'rgba(0,0,0,0)');
       ctx.fillStyle = gradient;
       
-      // Use fillRect to draw a colored square, relying on the gradient for the circular effect
       ctx.fillRect(h.x - radius, h.y - radius, radius * 2, radius * 2);
     });
   }, [hotspots]);
@@ -146,16 +183,19 @@ export default function HomePage() {
             + Create New Session
           </button>
 
-        <div className="session-items">
-          {sessions.map(session => {
-            const hasJoined = userJoinedSessions[session.id];
-            const joinCount = sessionJoinCounts[session.id] || 0;
+          {/* --- The main list display logic is here --- */}
+          <div className="session-items">
+            {sessions.map(session => {
+              const hasJoined = userJoinedSessions[session.id];
+              const joinCount = sessionJoinCounts[session.id] || 0;
 
               return (
                 <div key={session.id} className="session-item-condensed">
                   <div>
                     <h3>{session.topic}</h3>
+                    {/* Assuming you have session.floor and session.wing from the CreateModal */}
                     <p className="session-location">{session.location}</p>
+                    <p className="session-location-details">{session.floor} | {session.wing}</p>
                     {session.startTime?.seconds && (
                       <p className="session-time-start">
                         <strong>Starts:</strong> {new Date(session.startTime.seconds * 1000).toLocaleString()}
@@ -184,27 +224,30 @@ export default function HomePage() {
           </div>
         </div>
 
-        <div style={{ position: 'relative', width: 600, height: 400 }}>
-          <img
-            src={campusMap}
-            alt="Campus Map"
-            style={{ width: '100%', height: '100%', position: 'absolute', top: 0, left: 0 }}
-            onClick={handleClick}
-          />
-          <canvas ref={canvasRef} width={600} height={400} style={{ position: 'absolute', top: 0, left: 0 }} />
+        {/* --- Right column: Interactive Campus Map --- */}
+        <div className="map-container" style={{ flex: 1 }}>
+          <h3>Campus Map</h3>
+          <div style={{ position: 'relative', width: 600, height: 400 }}>
+            <img
+              src={campusMap}
+              alt="Campus Map"
+              style={{ width: '100%', height: '100%', position: 'absolute', top: 0, left: 0 }}
+              onClick={handleClick}
+            />
+            <canvas ref={canvasRef} width={600} height={400} style={{ position: 'absolute', top: 0, left: 0 }} />
+          </div>
+          <div style={{ marginTop: 10 }}>
+            {hotspots.map((h, i) => (
+              <p key={i}>
+                Zone {i + 1}: {h.people} people
+              </p>
+            ))}
+            <p>Simulation ticks: {tick}</p>
+          </div>
         </div>
+      </div> {/* Closes home-layout div */}
 
-        <div style={{ marginTop: 10 }}>
-          {hotspots.map((h, i) => (
-            <p key={i}>
-              Zone {i + 1}: {h.people} people
-            </p>
-          ))}
-          <p>Simulation ticks: {tick}</p>
-        </div>
-      </div>
-
-      {/* --- Modals (outside of the main layout div) --- */}
+      {/* --- Modals --- */}
       {isCreateModalOpen && <CreateSessionModal onClose={() => setIsCreateModalOpen(false)} onSessionCreated={fetchSessionData} />}
       {selectedSession && <SessionDetailsModal session={selectedSession} onClose={() => setSelectedSession(null)} />}
       {isEditModalOpen && <EditProfileModal onClose={() => setIsEditModalOpen(false)} onProfileUpdated={() => {}} />}
