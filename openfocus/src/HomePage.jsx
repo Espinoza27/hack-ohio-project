@@ -208,7 +208,7 @@ export default function HomePage() {
                   {/* --- CONDITIONAL BUTTON RENDERING --- */}
                   {hasJoined ? (
                     <Link to={`/session/${session.id}`} className="join-button">
-                      Join
+                      Chat
                     </Link>
                   ) : (
                     <button 

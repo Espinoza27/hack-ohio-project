@@ -600,35 +600,40 @@ input {
 }
 
 /* --- Modal Styles --- */
+/* --- Modal Styles (Responsive Update) --- */
 .modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.7);
+  background: rgba(0, 0, 0, 0.8);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
+  padding: 15px;
+  overflow-y: auto; 
 }
 
 .modal-content {
-  background: #2d2d2d; /* Use the visually pleasing style */
+  background: #2d2d2d;
   padding: 30px;
   border-radius: 12px;
-  border: 1px solid #555; /* Use the visually pleasing style */
-  width: 90%;
-  max-width: 600px;
+  border: 1px solid #555;
+  width: 100%;
+  max-width: 650px; /* Adjusted max width */
+  max-height: flex; /* Allow height to adjust */
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
   z-index: 1001;
 }
+
 .modal-content h2 {
   margin-top: 0;
   border-bottom: 1px solid #555;
   padding-bottom: 15px;
-  color: #fff; /* Use the visually pleasing style */
-  font-weight: 600; /* Use the visually pleasing style */
+  color: #fff;
+  font-weight: 600;
 }
 
 .modal-actions {
@@ -753,10 +758,36 @@ input {
 }
 
 /* Form group styling for the grid */
+/* REPLACEMENT for the .form-group block */
 .form-group {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 5px;
+  /* KEY FIX: Ensures all form groups align from the top of the grid cell */
+  align-items: flex-start; 
+}
+
+.form-group label {
+  font-weight: 500;
+  font-size: 0.9rem;
+  color: #ccc;
+  /* Ensures label starts at the very top */
+  align-self: flex-start;
+  margin-bottom: 0;
+}
+
+/* This targets the input/select/textarea directly below the label */
+.form-group > :is(input, select, textarea) {
+    /* KEY FIX: This property forces the input/select itself to align consistently to the top */
+    margin-top: 0; 
+    align-self: stretch; /* Makes input stretch across the available width */
+}
+
+/* Specific fix for the End Time helper text */
+.form-help-text {
+    margin-top: 5px; 
+    /* This ensures the small text doesn't affect the input's vertical position */
+    align-self: flex-start; 
 }
 .form-group.full-width {
   grid-column: 1 / -1; /* Make this element span both columns */
@@ -783,7 +814,7 @@ input {
   box-sizing: border-box; /* Important for padding */
 }
 .session-form-detailed textarea {
-  min-height: 80px;
+  min-height: 90px;
 }
 
 /* New End Session Button */
@@ -925,11 +956,4 @@ input {
   margin: 0 0 5px 0;
   color: #aaa;
   font-size: 0.85rem;
-}
-
-.form-help-text {
-  font-size: 0.75rem;
-  color: #aaa;
-  margin-top: 5px;
-  display: block;
 }
