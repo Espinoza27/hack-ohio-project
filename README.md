@@ -12,3 +12,5 @@ We built this project in under **24 hours** at **HackOH/IO 2025**, combining our
 Existing tools like the **OSU room reservation system** are limited — they only show reserved rooms and don’t reflect actual room usage or availability. Many “reserved” rooms sit empty, while open ones appear “full.”  
 
 **OpenFocus** bridges this gap by providing **live, crowd-sourced data** on which study spots are crowded and which are open, displayed on an **interactive campus map**.  
+
+AVAILABLE AT: https://lively-axolotl-9fc931.netlify.app/
