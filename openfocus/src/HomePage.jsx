@@ -32,14 +32,12 @@ export default function HomePage() {
   ];
   const [hotspots, setHotspots] = useState(initialHotspots);
 
-  // Filter options (first option is blank for All Classes)
   const classOptions = [
     "",
     "CSE", "MATH", "PHYSICS", "ECE", "ENGLISH", 
     "SPANISH", "BIO", "CHEM", "STAT", "HIST", "ECON"
   ];
 
-  // Cleanup expired sessions
   const cleanupExpiredSessions = async () => {
     const now = Timestamp.now();
     const expiredQuery = query(
@@ -55,7 +53,6 @@ export default function HomePage() {
     await batch.commit();
   };
 
-  // Fetch sessions and join counts
   const fetchSessionData = async () => {
     await cleanupExpiredSessions();
 
@@ -73,10 +70,10 @@ export default function HomePage() {
       const data = doc.data();
       const sessionId = data.sessionId;
       if (activeSessionIds.includes(sessionId)) {
-          joinCounts[sessionId] = (joinCounts[sessionId] || 0) + 1;
-          if (currentUser && data.userId === currentUser.uid) {
-              userJoins[sessionId] = true;
-          }
+        joinCounts[sessionId] = (joinCounts[sessionId] || 0) + 1;
+        if (currentUser && data.userId === currentUser.uid) {
+          userJoins[sessionId] = true;
+        }
       }
     });
 
@@ -153,7 +150,7 @@ export default function HomePage() {
   return (
     <>
       <div className="home-layout" style={{ display: 'flex', gap: '20px', padding: '20px' }}>
-        {/* --- Left column: session list --- */}
+        {/* Left column */}
         <div className="session-list-container" style={{ flex: 1 }}>
           <div className="home-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <h2>Study Sessions</h2>
@@ -169,7 +166,6 @@ export default function HomePage() {
           >
             + Create New Session
           </button>
-          {/* --- Session List --- */}
           <div className="session-items">
             {filteredSessions.map(session => {
               const hasJoined = userJoinedSessions[session.id];
@@ -190,33 +186,44 @@ export default function HomePage() {
                     </p>
                   </div>
                   {hasJoined ? (
-                    <Link to={`/session/${session.id}`} className="join-button">
-                      Join
-                    </Link>
+                    <Link to={`/session/${session.id}`} className="join-button">Join</Link>
                   ) : (
-                    <button className="join-button" onClick={() => setSelectedSession(session)}>
-                      Details
-                    </button>
+                    <button className="join-button" onClick={() => setSelectedSession(session)}>Details</button>
                   )}
                 </div>
               );
             })}
           </div>
         </div>
-        {/* --- Right column: Interactive Campus Map and filter --- */}
+
+        {/* Right column */}
         <div className="map-container" style={{ flex: 1 }}>
-          {/* Filter UI */}
+          <h3>Campus Map</h3>
+
+          {/* Legend */}
+          <div style={{ display: 'flex', gap: '20px', marginBottom: '15px', alignItems: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+              <div style={{ width: 20, height: 20, backgroundColor: 'rgba(0,255,0,0.4)', borderRadius: '50%' }} />
+              <span>Not Busy</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+              <div style={{ width: 20, height: 20, backgroundColor: 'rgba(255,255,0,0.4)', borderRadius: '50%' }} />
+              <span>Moderately Busy</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+              <div style={{ width: 20, height: 20, backgroundColor: 'rgba(255,0,0,0.4)', borderRadius: '50%' }} />
+              <span>Very Busy</span>
+            </div>
+          </div>
+
+          {/* Filter */}
           <div style={{
-            display: "flex", 
-            alignItems: "center", 
-            gap: "10px",
-            marginBottom: "15px", 
-            background: "#222",
-            padding: "14px 20px",
-            borderRadius: "10px",
+            display: "flex", alignItems: "center", gap: "10px",
+            marginBottom: "15px", background: "#222",
+            padding: "14px 20px", borderRadius: "10px",
             boxShadow: "0 1px 6px rgba(0,0,0,0.16)"
           }}>
-            <label style={{color:"#fff", fontWeight:600, marginRight:"8px"}}>Filter by Class:</label>
+            <label style={{color:"#fff", fontWeight:600}}>Filter by Class:</label>
             <select
               value={classFilter}
               onChange={e => setClassFilter(e.target.value)}
@@ -229,13 +236,13 @@ export default function HomePage() {
             </select>
             <input
               type="text"
-              placeholder="Type custom class (e.g. PSYCH 1100)"
+              placeholder="Custom class"
               value={customClass}
               onChange={e => setCustomClass(e.target.value)}
               style={{ minWidth:150, padding: "8px", borderRadius: "6px", fontSize: "15px", border: "1px solid #999" }}
             />
           </div>
-          <h3>Campus Map</h3>
+
           <div style={{ position: 'relative', width: 600, height: 400 }}>
             <img
               src={campusMap}
@@ -245,17 +252,17 @@ export default function HomePage() {
             />
             <canvas ref={canvasRef} width={600} height={400} style={{ position: 'absolute', top: 0, left: 0 }} />
           </div>
+
           <div style={{ marginTop: 10 }}>
             {hotspots.map((h, i) => (
-              <p key={i}>
-                Zone {i + 1}: {h.people} people
-              </p>
+              <p key={i}>Zone {i + 1}: {h.people} people</p>
             ))}
             <p>Simulation ticks: {tick}</p>
           </div>
         </div>
       </div>
-      {/* --- Modals --- */}
+
+      {/* Modals */}
       {isCreateModalOpen && <CreateSessionModal onClose={() => setIsCreateModalOpen(false)} onSessionCreated={fetchSessionData} />}
       {selectedSession && <SessionDetailsModal session={selectedSession} onClose={() => setSelectedSession(null)} />}
       {isEditModalOpen && <EditProfileModal onClose={() => setIsEditModalOpen(false)} onProfileUpdated={() => {}} />}
