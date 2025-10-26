@@ -2,15 +2,11 @@
 import React, { useState, useMemo } from 'react';
 import { db, auth } from './firebase';
 import { collection, addDoc } from 'firebase/firestore';
+// Assuming TimeUtils.js exists and is correct from previous steps
+import { generateTimeOptions, timeToHHMM } from './TimeUtils'; 
 
-// Helper function to format dates for datetime-local input
-const toLocalISOString = (date) => {
-  if (!date) return '';
-  const tzOffset = date.getTimezoneOffset() * 60000;
-  // Ensure we use the full Date object for consistent time string generation
-  const localISOTime = new Date(date.getTime() - tzOffset).toISOString().slice(0, 16);
-  return localISOTime;
-};
+// Helper function to format dates for the input type="date" (YYYY-MM-DD)
+const toYYYYMMDD = (date) => date.toISOString().split('T')[0];
 
 // Helper function to get min/max days for START date
 const getMinMaxDays = () => {
@@ -19,8 +15,8 @@ const getMinMaxDays = () => {
   oneYearFromNow.setFullYear(now.getFullYear() + 1);
 
   return {
-    minStartTime: toLocalISOString(now),
-    maxStartTime: toLocalISOString(oneYearFromNow),
+    minDate: toYYYYMMDD(now),
+    maxDate: toYYYYMMDD(oneYearFromNow),
   };
 };
 
@@ -32,32 +28,60 @@ const CreateSessionModal = ({ onClose, onSessionCreated }) => {
   const [wing, setWing] = useState('');
   
   const now = useMemo(() => new Date(), []);
+  // Default start date to today's date
   const [startDate, setStartDate] = useState(toYYYYMMDD(now)); 
-  const [startTime, setStartTime] = useState(''); 
-  const [endTime, setEndTime] = useState('');     
+  const [startTime, setStartTime] = useState(''); // Time input (HH:MM)
+  const [endTime, setEndTime] = useState('');     // Time input (HH:MM)
 
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const { minStartTime, maxStartTime } = getMinMaxStartTimes();
+  const { minDate, maxDate } = getMinMaxDays();
+  
+  // Generate all possible times in 15-minute intervals once
+  const allTimeOptions = useMemo(() => generateTimeOptions(15), []);
 
-  // Calculate dynamic min/max for END time based on selected start time
-  const getEndTimeConstraints = () => {
-    if (!startTime) return { minEndTime: '', maxEndTime: '' };
+  // Filter start time options based on current date
+  const startOptions = useMemo(() => {
+    const todayYYYYMMDD = toYYYYMMDD(now);
+    
+    if (startDate === todayYYYYMMDD) {
+      // If the selected date is TODAY, filter out past times
+      const currentMinutes = now.getHours() * 60 + now.getMinutes();
+      const nextIntervalMinutes = Math.ceil((currentMinutes + 1) / 15) * 15;
+      
+      return allTimeOptions.filter(opt => opt.minutes >= nextIntervalMinutes);
+    }
+    
+    // For any future date, show all times
+    return allTimeOptions;
+  }, [startDate, allTimeOptions, now]);
 
-    const startDate = new Date(startTime);
-    const minEndDate = new Date(startDate); // End must be after start
-    const maxEndDate = new Date(startDate.getTime() + 24 * 60 * 60 * 1000); // 24 hours max
+  // Filter end time options: only show times up to 8 hours after selected start time
+  const filteredEndTimeOptions = useMemo(() => {
+    if (!startTime) return [];
+    
+    const startOption = allTimeOptions.find(opt => opt.value === startTime);
+    if (!startOption) return [];
 
-    return {
-      minEndTime: toLocalISOString(minEndDate),
-      maxEndTime: toLocalISOString(maxEndDate),
-    };
-  };
+    const startMinutes = startOption.minutes;
+    const maxDurationMinutes = 8 * 60; // 8 hours
+    const maxEndMinutes = startMinutes + maxDurationMinutes;
 
-  const { minEndTime, maxEndTime } = getEndTimeConstraints();
+    return allTimeOptions.filter(opt => {
+        const endMinutes = opt.minutes;
+        
+        // Check 1: Must be later than start time
+        if (endMinutes <= startMinutes) {
+            // Only include if it's in the next day's 8-hour window
+            return endMinutes <= (maxEndMinutes % (24 * 60));
+        }
 
-  // Removed unnecessary handleStartTimeChange and handleEndTimeChange functions
+        // Check 2: Must be within the 8-hour duration on the same day
+        return endMinutes <= maxEndMinutes;
+    });
+  }, [startTime, allTimeOptions]);
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -77,9 +101,9 @@ const CreateSessionModal = ({ onClose, onSessionCreated }) => {
       return;
     }
 
-    // 1. Construct Start Time Date Object and Validate against Current Time
+    // --- 1. Construct Start Time Date Object and Validate against Current Time ---
     const [startHour, startMinute] = startTime.split(':').map(Number);
-    const startTimeDate = new Date(startDate);
+    const startTimeDate = new Date(startDate); // Start date (YYYY-MM-DD)
     startTimeDate.setHours(startHour, startMinute, 0, 0);
 
     if (startTimeDate < new Date()) {
@@ -88,24 +112,30 @@ const CreateSessionModal = ({ onClose, onSessionCreated }) => {
       return;
     }
 
-    const startTimeDate = new Date(startTime);
     let endTimeDate = null;
 
-    // 2. End Time Logic (Default or Validation)
+    // --- 2. End Time Logic (Default or Validation) ---
     if (endTime) {
-      // If user provided an end time
-      endTimeDate = new Date(endTime);
+      // If user provided an end time (HH:MM from dropdown)
+      const [endHour, endMinute] = endTime.split(':').map(Number);
       
-      if (endTimeDate <= startTimeDate) {
+      endTimeDate = new Date(startDate);
+      endTimeDate.setHours(endHour, endMinute, 0, 0);
+
+      const maxAllowedEndTime = new Date(startTimeDate.getTime() + 8 * 60 * 60 * 1000); 
+
+      // If the time rolled over (e.g., started at 10 PM, ends at 4 AM), advance the date
+      if (endTimeDate.getTime() <= startTimeDate.getTime()) {
+          endTimeDate.setDate(endTimeDate.getDate() + 1);
+      }
+      
+      if (endTimeDate.getTime() <= startTimeDate.getTime()) {
         setError('End time must be after the start time.');
         setLoading(false);
         return;
       }
-
-      // Check if end time is within the 24-hour limit (though min/max should cover this)
-      const maxAllowedEndTime = new Date(startTimeDate.getTime() + 24 * 60 * 60 * 1000);
-      if (endTimeDate > maxAllowedEndTime) {
-        setError('End time cannot be more than 24 hours after the start time.');
+      if (endTimeDate.getTime() > maxAllowedEndTime.getTime()) {
+        setError('End time cannot be more than 8 hours after the start time.');
         setLoading(false);
         return;
       }
@@ -124,7 +154,7 @@ const CreateSessionModal = ({ onClose, onSessionCreated }) => {
         createdAt: new Date(),
         status: 'active',
       });
-
+      
       onSessionCreated();
       onClose();
     } catch (err) {
@@ -152,7 +182,7 @@ const CreateSessionModal = ({ onClose, onSessionCreated }) => {
           </div>
 
           {/* Location */}
-          <div className="form-group half-width">
+          <div className="form-group half-width"> 
             <label>Building Location</label>
             <select value={location} onChange={(e) => setLocation(e.target.value)}>
               <option value="Thompson Library">Thompson Library</option>
@@ -163,8 +193,8 @@ const CreateSessionModal = ({ onClose, onSessionCreated }) => {
             </select>
           </div>
 
-          {/* Floor and Wing */}
-          <div className="form-group half-width">
+          {/* Floor */}
+          <div className="form-group half-width"> 
             <label>Floor/Room Number</label>
             <input type="text" value={floor} onChange={(e) => setFloor(e.target.value)} placeholder="e.g., 3rd Floor" required />
           </div>
@@ -181,36 +211,50 @@ const CreateSessionModal = ({ onClose, onSessionCreated }) => {
             />
           </div>
 
-          {/* Start Time */}
+          {/* --- DATE/TIME DROPDOWNS --- */}
           <div className="form-group half-width">
-            <label>Start Time</label>
+            <label>Start Date</label>
             <input
-              type="datetime-local"
-              value={startTime}
-              onChange={(e) => setStartTime(e.target.value)}
-              min={minStartTime}
-              max={maxStartTime}
-              // Removed step attribute as it's not well-supported and conflicts with custom logic
+              type="date"
+              value={startDate}
+              onChange={(e) => { setStartDate(e.target.value); setEndTime(''); /* Clear end time on date change */ }}
+              min={minDate}
+              max={maxDate}
               required
             />
           </div>
-
-          {/* End Time */}
+          
+          <div className="form-group half-width">
+            <label>Start Time (15 min intervals)</label>
+            <select
+              value={startTime}
+              onChange={(e) => setStartTime(e.target.value)}
+              required
+            >
+              <option value="" disabled>Select Time</option>
+              {startOptions.map(opt => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          
           <div className="form-group half-width">
             <label>End Time (Optional - max 8 hours)</label>
             <select
               value={endTime}
               onChange={(e) => setEndTime(e.target.value)}
-              min={minEndTime}
-              max={maxEndTime}
               disabled={!startTime}
-              // Removed step attribute
-            />
-            {!endTime && startTime && (
-              <small className="form-help-text">
-                Defaults to 11:59 PM on the same day if left blank.
-              </small>
-            )}
+            >
+              <option value="">(Default: 11:59 PM)</option>
+              {filteredEndTimeOptions.map(opt => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+            {!endTime && startTime && <small className="form-help-text">Defaults to 11:59 PM on start date.</small>}
           </div>
           {/* --- END OF DATE/TIME DROPDOWNS --- */}
 
@@ -219,8 +263,7 @@ const CreateSessionModal = ({ onClose, onSessionCreated }) => {
 
           <div className="modal-actions full-width">
             <button type="button" className="button-secondary" onClick={onClose} disabled={loading}>Cancel</button>
-            {/* 🔹 Changed style to match Cancel button */}
-            <button type="submit" className="button-secondary" disabled={loading}>{loading ? 'Creating...' : 'Create Session'}</button>
+            <button type="submit" className="create-button-full" disabled={loading}>{loading ? 'Creating...' : 'Create Session'}</button>
           </div>
         </form>
       </div>
