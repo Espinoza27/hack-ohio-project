@@ -2,10 +2,15 @@
 import React, { useState, useMemo } from 'react';
 import { db, auth } from './firebase';
 import { collection, addDoc } from 'firebase/firestore';
-import { generateTimeOptions } from './TimeUtils'; // <-- Removed timeToHHMM as it's not needed here
 
-// Helper function to format dates for the input type="date" (YYYY-MM-DD)
-const toYYYYMMDD = (date) => date.toISOString().split('T')[0];
+// Helper function to format dates for datetime-local input
+const toLocalISOString = (date) => {
+  if (!date) return '';
+  const tzOffset = date.getTimezoneOffset() * 60000;
+  // Ensure we use the full Date object for consistent time string generation
+  const localISOTime = new Date(date.getTime() - tzOffset).toISOString().slice(0, 16);
+  return localISOTime;
+};
 
 // Helper function to get min/max days for START date
 const getMinMaxDays = () => {
@@ -14,8 +19,8 @@ const getMinMaxDays = () => {
   oneYearFromNow.setFullYear(now.getFullYear() + 1);
 
   return {
-    minDate: toYYYYMMDD(now),
-    maxDate: toYYYYMMDD(oneYearFromNow),
+    minStartTime: toLocalISOString(now),
+    maxStartTime: toLocalISOString(oneYearFromNow),
   };
 };
 
@@ -34,51 +39,25 @@ const CreateSessionModal = ({ onClose, onSessionCreated }) => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const { minDate, maxDate } = getMinMaxDays();
-  
-  // Generate all possible times in 15-minute intervals once
-  const allTimeOptions = useMemo(() => generateTimeOptions(15), []);
+  const { minStartTime, maxStartTime } = getMinMaxStartTimes();
 
-  // --- Filter start time options based on current date ---
-  const startOptions = useMemo(() => {
-    const todayYYYYMMDD = toYYYYMMDD(now);
-    
-    if (startDate === todayYYYYMMDD) {
-      const currentMinutes = now.getHours() * 60 + now.getMinutes();
-      const nextIntervalMinutes = Math.ceil((currentMinutes + 1) / 15) * 15;
-      
-      return allTimeOptions.filter(opt => opt.minutes >= nextIntervalMinutes);
-    }
-    
-    return allTimeOptions;
-  }, [startDate, allTimeOptions, now]);
+  // Calculate dynamic min/max for END time based on selected start time
+  const getEndTimeConstraints = () => {
+    if (!startTime) return { minEndTime: '', maxEndTime: '' };
 
-  // --- FIX: Filter end time options for 8-hour rollover ---
-  const filteredEndTimeOptions = useMemo(() => {
-    if (!startTime) return [];
-    
-    const startOption = allTimeOptions.find(opt => opt.value === startTime);
-    if (!startOption) return [];
+    const startDate = new Date(startTime);
+    const minEndDate = new Date(startDate); // End must be after start
+    const maxEndDate = new Date(startDate.getTime() + 24 * 60 * 60 * 1000); // 24 hours max
 
-    const startMinutes = startOption.minutes;
-    const maxDurationMinutes = 8 * 60; // 8 hours
-    const maxEndMinutes = startMinutes + maxDurationMinutes;
+    return {
+      minEndTime: toLocalISOString(minEndDate),
+      maxEndTime: toLocalISOString(maxEndDate),
+    };
+  };
 
-    return allTimeOptions.filter(opt => {
-        const endMinutes = opt.minutes;
-        
-        // Check 1: Must be later than start time
-        if (endMinutes <= startMinutes) {
-            // Only include if it's in the next day's 8-hour window
-            return endMinutes <= (maxEndMinutes % (24 * 60));
-        }
+  const { minEndTime, maxEndTime } = getEndTimeConstraints();
 
-        // Check 2: Must be within the 8-hour duration on the same day
-        return endMinutes <= maxEndMinutes;
-    });
-  }, [startTime, allTimeOptions]);
-  // --- END FIX ---
-
+  // Removed unnecessary handleStartTimeChange and handleEndTimeChange functions
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -109,30 +88,24 @@ const CreateSessionModal = ({ onClose, onSessionCreated }) => {
       return;
     }
 
+    const startTimeDate = new Date(startTime);
     let endTimeDate = null;
 
     // 2. End Time Logic (Default or Validation)
     if (endTime) {
-      // If user provided an end time (HH:MM from dropdown)
-      const [endHour, endMinute] = endTime.split(':').map(Number);
+      // If user provided an end time
+      endTimeDate = new Date(endTime);
       
-      endTimeDate = new Date(startDate);
-      endTimeDate.setHours(endHour, endMinute, 0, 0);
-
-      const maxAllowedEndTime = new Date(startTimeDate.getTime() + 8 * 60 * 60 * 1000); 
-
-      // If the time rolled over, we must advance the date by one day
-      if (endTimeDate.getTime() <= startTimeDate.getTime()) {
-          endTimeDate.setDate(endTimeDate.getDate() + 1);
-      }
-      
-      if (endTimeDate.getTime() <= startTimeDate.getTime()) {
+      if (endTimeDate <= startTimeDate) {
         setError('End time must be after the start time.');
         setLoading(false);
         return;
       }
-      if (endTimeDate.getTime() > maxAllowedEndTime.getTime()) {
-        setError('End time cannot be more than 8 hours after the start time.');
+
+      // Check if end time is within the 24-hour limit (though min/max should cover this)
+      const maxAllowedEndTime = new Date(startTimeDate.getTime() + 24 * 60 * 60 * 1000);
+      if (endTimeDate > maxAllowedEndTime) {
+        setError('End time cannot be more than 24 hours after the start time.');
         setLoading(false);
         return;
       }
@@ -151,7 +124,7 @@ const CreateSessionModal = ({ onClose, onSessionCreated }) => {
         createdAt: new Date(),
         status: 'active',
       });
-      
+
       onSessionCreated();
       onClose();
     } catch (err) {
@@ -167,7 +140,7 @@ const CreateSessionModal = ({ onClose, onSessionCreated }) => {
       <div className="modal-content">
         <h2>Create New Study Session</h2>
         <form onSubmit={handleSubmit} className="session-form-detailed">
-          
+
           {/* Topic and Description */}
           <div className="form-group full-width">
             <label>Topic</label>
@@ -179,7 +152,7 @@ const CreateSessionModal = ({ onClose, onSessionCreated }) => {
           </div>
 
           {/* Location */}
-          <div className="form-group half-width"> 
+          <div className="form-group half-width">
             <label>Building Location</label>
             <select value={location} onChange={(e) => setLocation(e.target.value)}>
               <option value="Thompson Library">Thompson Library</option>
@@ -190,8 +163,8 @@ const CreateSessionModal = ({ onClose, onSessionCreated }) => {
             </select>
           </div>
 
-          {/* Floor */}
-          <div className="form-group half-width"> 
+          {/* Floor and Wing */}
+          <div className="form-group half-width">
             <label>Floor/Room Number</label>
             <input type="text" value={floor} onChange={(e) => setFloor(e.target.value)} placeholder="e.g., 3rd Floor" required />
           </div>
@@ -199,53 +172,45 @@ const CreateSessionModal = ({ onClose, onSessionCreated }) => {
           {/* Wing/Side */}
           <div className="form-group full-width">
             <label>Wing/Side Details</label>
-            <input type="text" value={wing} onChange={(e) => setWing(e.target.value)} placeholder="e.g., Left Wing near Starbucks, Room 310" required />
-          </div>
-
-          {/* --- DATE/TIME DROPDOWNS --- */}
-          <div className="form-group half-width">
-            <label>Start Date</label>
             <input
-              type="date"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              min={minDate}
-              max={maxDate}
+              type="text"
+              value={wing}
+              onChange={(e) => setWing(e.target.value)}
+              placeholder="e.g., Left Wing near Starbucks, Room 310"
               required
             />
           </div>
-          
+
+          {/* Start Time */}
           <div className="form-group half-width">
-            <label>Start Time (15 min intervals)</label>
-            <select
+            <label>Start Time</label>
+            <input
+              type="datetime-local"
               value={startTime}
               onChange={(e) => setStartTime(e.target.value)}
+              min={minStartTime}
+              max={maxStartTime}
+              // Removed step attribute as it's not well-supported and conflicts with custom logic
               required
-            >
-              <option value="" disabled>Select Time</option>
-              {startOptions.map(opt => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
+            />
           </div>
-          
+
+          {/* End Time */}
           <div className="form-group half-width">
             <label>End Time (Optional - max 8 hours)</label>
             <select
               value={endTime}
               onChange={(e) => setEndTime(e.target.value)}
+              min={minEndTime}
+              max={maxEndTime}
               disabled={!startTime}
-            >
-              <option value="">(Default: 11:59 PM)</option>
-              {filteredEndTimeOptions.map(opt => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
-            {!endTime && startTime && <small className="form-help-text">Defaults to 11:59 PM on start date.</small>}
+              // Removed step attribute
+            />
+            {!endTime && startTime && (
+              <small className="form-help-text">
+                Defaults to 11:59 PM on the same day if left blank.
+              </small>
+            )}
           </div>
           {/* --- END OF DATE/TIME DROPDOWNS --- */}
 
@@ -253,12 +218,9 @@ const CreateSessionModal = ({ onClose, onSessionCreated }) => {
           {error && <p className="modal-error full-width">{error}</p>}
 
           <div className="modal-actions full-width">
-            <button type="button" className="button-secondary" onClick={onClose} disabled={loading}>
-              Cancel
-            </button>
-            <button type="submit" className="create-button-full" disabled={loading}>
-              {loading ? 'Creating...' : 'Create Session'}
-            </button>
+            <button type="button" className="button-secondary" onClick={onClose} disabled={loading}>Cancel</button>
+            {/* 🔹 Changed style to match Cancel button */}
+            <button type="submit" className="button-secondary" disabled={loading}>{loading ? 'Creating...' : 'Create Session'}</button>
           </div>
         </form>
       </div>
