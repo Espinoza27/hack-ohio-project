@@ -3,7 +3,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { db, auth } from './firebase';
 import { collection, getDocs, writeBatch, Timestamp, query, where } from 'firebase/firestore'; 
 import { signOut } from 'firebase/auth';
-import { Link } from 'react-router-dom'; // Correct single import for Link
+import { Link } from 'react-router-dom';
 import EditProfileModal from './EditProfileModal';
 import CreateSessionModal from './CreateSessionModal';
 import SessionDetailsModal from './SessionDetailsModal';
@@ -11,19 +11,17 @@ import campusMap from './assets/campusMap.png';
 
 export default function HomePage() {
   const canvasRef = useRef(null);
-  
-  // --- STATE DECLARATIONS ---
+
   const [sessions, setSessions] = useState([]);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [selectedSession, setSelectedSession] = useState(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  
-  // --- MISSING SESSION STATE ---
-  const [userJoinedSessions, setUserJoinedSessions] = useState({}); // Tracking user joins
-  const [sessionJoinCounts, setSessionJoinCounts] = useState({});   // Tracking total joins
-  const [tick, setTick] = useState(0); // Added missing tick state
-  const currentUser = auth.currentUser; // Get current user for join checks
-  // --- END MISSING SESSION STATE ---
+  const [userJoinedSessions, setUserJoinedSessions] = useState({}); 
+  const [sessionJoinCounts, setSessionJoinCounts] = useState({});
+  const [tick, setTick] = useState(0); 
+  const [classFilter, setClassFilter] = useState("");
+  const [customClass, setCustomClass] = useState("");
+  const currentUser = auth.currentUser;
 
   const initialHotspots = [
     { x: 500, y: 210, people: 30 },
@@ -34,8 +32,14 @@ export default function HomePage() {
   ];
   const [hotspots, setHotspots] = useState(initialHotspots);
 
+  // Filter options (first option is blank for All Classes)
+  const classOptions = [
+    "",
+    "CSE", "MATH", "PHYSICS", "ECE", "ENGLISH", 
+    "SPANISH", "BIO", "CHEM", "STAT", "HIST", "ECON"
+  ];
 
-  // --- Client-side Cleanup Function ---
+  // Cleanup expired sessions
   const cleanupExpiredSessions = async () => {
     const now = Timestamp.now();
     const expiredQuery = query(
@@ -44,31 +48,23 @@ export default function HomePage() {
     );
     const snapshot = await getDocs(expiredQuery);
     if (snapshot.empty) return;
-    
     const batch = writeBatch(db);
     snapshot.docs.forEach(sessionDoc => {
       batch.delete(sessionDoc.ref);
     });
     await batch.commit();
   };
-  // --- END Client-side Cleanup Function ---
 
-
-  // --- COMBINED FETCH FUNCTION (Sessions, Joins, Counts) ---
+  // Fetch sessions and join counts
   const fetchSessionData = async () => {
-    await cleanupExpiredSessions(); // Run cleanup first
-    
-    const now = new Date(); 
+    await cleanupExpiredSessions();
 
-    // 1. Fetch ALL Sessions
+    const now = new Date(); 
     const sessionsSnapshot = await getDocs(collection(db, 'sessions'));
     const allSessions = sessionsSnapshot.docs
       .map(doc => ({ id: doc.id, ...doc.data() }))
       .filter(session => !session.endTime || (session.endTime.seconds * 1000) > now.getTime());
-      
     const activeSessionIds = allSessions.map(s => s.id);
-    
-    // 2. Fetch Join Counts
     const joinsSnapshot = await getDocs(collection(db, 'sessionJoins'));
     const joinCounts = {};
     const userJoins = {}; 
@@ -76,10 +72,8 @@ export default function HomePage() {
     joinsSnapshot.docs.forEach(doc => {
       const data = doc.data();
       const sessionId = data.sessionId;
-
       if (activeSessionIds.includes(sessionId)) {
           joinCounts[sessionId] = (joinCounts[sessionId] || 0) + 1;
-          
           if (currentUser && data.userId === currentUser.uid) {
               userJoins[sessionId] = true;
           }
@@ -90,18 +84,13 @@ export default function HomePage() {
     setUserJoinedSessions(userJoins);
     setSessionJoinCounts(joinCounts);
   };
-  // --- END COMBINED FETCH FUNCTION ---
-
 
   useEffect(() => {
     fetchSessionData();
-    // Re-fetch when the current user changes (e.g., after login/sign up)
     const unsubscribe = auth.onAuthStateChanged(() => fetchSessionData());
     return () => unsubscribe();
   }, [currentUser]);
 
-
-  // Simulate people movement (0–800)
   useEffect(() => {
     const interval = setInterval(() => {
       setHotspots(prev =>
@@ -118,11 +107,9 @@ export default function HomePage() {
     return () => clearInterval(interval);
   }, []);
 
-  // Draw hotspots with radius scaling
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    
     const ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -131,19 +118,26 @@ export default function HomePage() {
       if (h.people <= 50) color = 'rgba(0,255,0,0.4)';
       else if (h.people <= 400) color = 'rgba(255,255,0,0.4)';
       else color = 'rgba(255,0,0,0.4)';
-
       const minRadius = 20;
       const maxRadius = 100;
       const radius = minRadius + ((h.people / 800) * (maxRadius - minRadius));
-
       const gradient = ctx.createRadialGradient(h.x, h.y, 0, h.x, h.y, radius);
       gradient.addColorStop(0, color);
       gradient.addColorStop(1, 'rgba(0,0,0,0)');
       ctx.fillStyle = gradient;
-      
       ctx.fillRect(h.x - radius, h.y - radius, radius * 2, radius * 2);
     });
   }, [hotspots]);
+
+  function matchesFilter(session) {
+    if (!classFilter && !customClass) return true;
+    const topic = (session.topic || "").toLowerCase();
+    if (customClass && topic.includes(customClass.toLowerCase())) return true;
+    if (classFilter && topic.includes(classFilter.toLowerCase())) return true;
+    return false;
+  }
+
+  const filteredSessions = sessions.filter(matchesFilter);
 
   const handleSignOut = () => {
     signOut(auth).catch(err => console.error('Sign out error:', err));
@@ -157,24 +151,17 @@ export default function HomePage() {
   };
 
   return (
-    <> {/* Use fragment to wrap the main layout and the modals */}
+    <>
       <div className="home-layout" style={{ display: 'flex', gap: '20px', padding: '20px' }}>
-        
         {/* --- Left column: session list --- */}
         <div className="session-list-container" style={{ flex: 1 }}>
-          
           <div className="home-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <h2>Study Sessions</h2>
             <div style={{ display: 'flex', gap: '15px' }}>
-              <button onClick={() => setIsEditModalOpen(true)} className="button-secondary">
-                Edit Profile
-              </button>
-              <button onClick={handleSignOut} className="sign-out-button">
-                Sign Out
-              </button>
+              <button onClick={() => setIsEditModalOpen(true)} className="button-secondary">Edit Profile</button>
+              <button onClick={handleSignOut} className="sign-out-button">Sign Out</button>
             </div>
           </div>
-
           <button
             className="create-button-full"
             style={{ width: '100%', marginBottom: '25px', backgroundColor: '#28a745', color: 'white', padding: '10px', borderRadius: '5px', cursor: 'pointer' }}
@@ -182,18 +169,15 @@ export default function HomePage() {
           >
             + Create New Session
           </button>
-
-          {/* --- The main list display logic is here --- */}
+          {/* --- Session List --- */}
           <div className="session-items">
-            {sessions.map(session => {
+            {filteredSessions.map(session => {
               const hasJoined = userJoinedSessions[session.id];
               const joinCount = sessionJoinCounts[session.id] || 0;
-
               return (
                 <div key={session.id} className="session-item-condensed">
                   <div>
                     <h3>{session.topic}</h3>
-                    {/* Assuming you have session.floor and session.wing from the CreateModal */}
                     <p className="session-location">{session.location}</p>
                     <p className="session-location-details">{session.floor} | {session.wing}</p>
                     {session.startTime?.seconds && (
@@ -205,16 +189,10 @@ export default function HomePage() {
                        {joinCount} joined
                     </p>
                   </div>
-                  {/* --- CONDITIONAL BUTTON RENDERING --- */}
                   {hasJoined ? (
-                    <Link to={`/session/${session.id}`} className="join-button">
-                      Join
-                    </Link>
+                    <Link to={`/session/{session.id}`} className="join-button">Join</Link>
                   ) : (
-                    <button 
-                      className="join-button" 
-                      onClick={() => setSelectedSession(session)}
-                    >
+                    <button className="join-button" onClick={() => setSelectedSession(session)}>
                       Details
                     </button>
                   )}
@@ -223,9 +201,38 @@ export default function HomePage() {
             })}
           </div>
         </div>
-
-        {/* --- Right column: Interactive Campus Map --- */}
+        {/* --- Right column: Interactive Campus Map and filter --- */}
         <div className="map-container" style={{ flex: 1 }}>
+          {/* Filter UI */}
+          <div style={{
+            display: "flex", 
+            alignItems: "center", 
+            gap: "10px",
+            marginBottom: "15px", 
+            background: "#222",
+            padding: "14px 20px",
+            borderRadius: "10px",
+            boxShadow: "0 1px 6px rgba(0,0,0,0.16)"
+          }}>
+            <label style={{color:"#fff", fontWeight:600, marginRight:"8px"}}>Filter by Class:</label>
+            <select
+              value={classFilter}
+              onChange={e => setClassFilter(e.target.value)}
+              style={{ minWidth: 120, padding: "8px", borderRadius: "6px", fontSize: "15px", border: "1px solid #999" }}
+            >
+              <option value="">All Classes</option>
+              {classOptions.slice(1).map(opt => (
+                <option key={opt} value={opt}>{opt}</option>
+              ))}
+            </select>
+            <input
+              type="text"
+              placeholder="Type custom class (e.g. PSYCH 1100)"
+              value={customClass}
+              onChange={e => setCustomClass(e.target.value)}
+              style={{ minWidth:150, padding: "8px", borderRadius: "6px", fontSize: "15px", border: "1px solid #999" }}
+            />
+          </div>
           <h3>Campus Map</h3>
           <div style={{ position: 'relative', width: 600, height: 400 }}>
             <img
@@ -245,8 +252,7 @@ export default function HomePage() {
             <p>Simulation ticks: {tick}</p>
           </div>
         </div>
-      </div> {/* Closes home-layout div */}
-
+      </div>
       {/* --- Modals --- */}
       {isCreateModalOpen && <CreateSessionModal onClose={() => setIsCreateModalOpen(false)} onSessionCreated={fetchSessionData} />}
       {selectedSession && <SessionDetailsModal session={selectedSession} onClose={() => setSelectedSession(null)} />}
