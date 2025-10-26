@@ -64,7 +64,7 @@ const EditProfileModal = ({ onClose, onProfileUpdated }) => {
     try {
       let photoURL = currentPhotoURL;
 
-      // Upload to Cloudinary if a new file is selected
+      // Upload to Cloudinary if new file is selected
       if (profilePicFile) {
         const formData = new FormData();
         formData.append('file', profilePicFile);
@@ -79,7 +79,6 @@ const EditProfileModal = ({ onClose, onProfileUpdated }) => {
 
       // Update Firebase Auth and Firestore
       await updateProfile(user, { displayName, photoURL });
-
       const userDocRef = doc(db, "users", user.uid);
       await setDoc(userDocRef, {
         displayName,
@@ -103,10 +102,9 @@ const EditProfileModal = ({ onClose, onProfileUpdated }) => {
       <div className="modal-content" style={{ textAlign: 'center' }}>
         <h2>Edit Your Profile</h2>
 
-        {/* 🔹 Profile Picture Header and Circle */}
+        {/* Profile Picture */}
         <div style={{ marginTop: '10px', marginBottom: '25px' }}>
           <h3 style={{ marginBottom: '10px' }}>Profile Picture</h3>
-
           <div style={{ display: 'flex', justifyContent: 'center' }}>
             <img
               src={currentPhotoURL}
@@ -124,18 +122,9 @@ const EditProfileModal = ({ onClose, onProfileUpdated }) => {
               }}
             />
           </div>
-
-          <p
-            style={{
-              fontSize: '0.9rem',
-              color: '#666',
-              marginTop: '8px',
-              fontStyle: 'italic',
-            }}
-          >
+          <p style={{ fontSize: '0.9rem', color: '#666', marginTop: '8px', fontStyle: 'italic' }}>
             Click to change profile picture
           </p>
-
           <input
             type="file"
             accept="image/*"
@@ -145,7 +134,7 @@ const EditProfileModal = ({ onClose, onProfileUpdated }) => {
           />
         </div>
 
-        {/* 🔹 Profile Details Form */}
+        {/* Profile Form */}
         <form onSubmit={handleSave} className="session-form-detailed">
           <div className="form-group full-width">
             <label>Display Name</label>
@@ -177,16 +166,17 @@ const EditProfileModal = ({ onClose, onProfileUpdated }) => {
             />
           </div>
 
-          <div className="modal-actions full-width">
+          {/* Action Buttons */}
+          <div className="modal-actions full-width" style={{ display: 'flex', justifyContent: 'space-around', marginTop: '20px' }}>
             <button type="button" className="button-secondary" onClick={onClose}>
               Cancel
             </button>
-            <button type="submit" className="create-button-full" disabled={loading}>
+            <button type="submit" className="button-secondary" disabled={loading}>
               {loading ? 'Saving...' : 'Save Changes'}
             </button>
           </div>
 
-          {error && <p className="modal-error full-width">{error}</p>}
+          {error && <p className="modal-error full-width" style={{ marginTop: '10px' }}>{error}</p>}
         </form>
       </div>
     </div>
