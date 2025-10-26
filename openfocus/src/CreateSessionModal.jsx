@@ -1,130 +1,150 @@
 // src/CreateSessionModal.jsx
-import React, { useState, useMemo } from "react";
-import { db, auth } from "./firebase";
-import { collection, addDoc } from "firebase/firestore";
+import React, { useState } from 'react';
+import { db, auth } from './firebase';
+import { collection, addDoc } from 'firebase/firestore';
 
-// Convert Date -> local ISO for input value
+// Helper function to format dates for datetime-local input
 const toLocalISOString = (date) => {
-  if (!date) return "";
+  if (!date) return '';
   const tzOffset = date.getTimezoneOffset() * 60000;
-  return new Date(date.getTime() - tzOffset).toISOString().slice(0, 16);
+  const localISOTime = new Date(date.getTime() - tzOffset).toISOString().slice(0, 16);
+  return localISOTime;
 };
 
+// Helper function to get min/max for START time input
 const getMinMaxStartTimes = () => {
   const now = new Date();
-  const oneYear = new Date();
-  oneYear.setFullYear(now.getFullYear() + 1);
-  return { minStartTime: toLocalISOString(now), maxStartTime: toLocalISOString(oneYear) };
+  const oneYearFromNow = new Date();
+  oneYearFromNow.setFullYear(now.getFullYear() + 1);
+
+  return {
+    minStartTime: toLocalISOString(now),
+    maxStartTime: toLocalISOString(oneYearFromNow),
+  };
 };
 
-const DURATION_OPTIONS = [
-  { label: "Default (until 11:59 PM)", value: "" },
-  { label: "30 minutes", value: "0.5" },
-  { label: "1 hour", value: "1" },
-  { label: "1 hour 30 minutes", value: "1.5" },
-  { label: "2 hours", value: "2" },
-  { label: "2 hours 30 minutes", value: "2.5" },
-  { label: "3 hours", value: "3" },
-  { label: "3 hours 30 minutes", value: "3.5" },
-  { label: "4 hours", value: "4" },
-  { label: "4 hours 30 minutes", value: "4.5" },
-  { label: "5 hours", value: "5" },
-  { label: "5 hours 30 minutes", value: "5.5" },
-  { label: "6 hours", value: "6" },
-];
-
 const CreateSessionModal = ({ onClose, onSessionCreated }) => {
+  const [topic, setTopic] = useState('');
+  const [description, setDescription] = useState('');
+  const [location, setLocation] = useState('Thompson Library');
+  const [floor, setFloor] = useState('');
+  const [wing, setWing] = useState('');
+  const [startTime, setStartTime] = useState('');
+  const [endTime, setEndTime] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
   const { minStartTime, maxStartTime } = getMinMaxStartTimes();
 
-  const [topic, setTopic] = useState("");
-  const [description, setDescription] = useState("");
-  const [location, setLocation] = useState("Thompson Library");
-  const [startTime, setStartTime] = useState("");
-  const [duration, setDuration] = useState(""); // string like "1.5" or ""
-  const [error, setError] = useState("");
+  // Calculate dynamic min/max for END time based on selected start time
+  const getEndTimeConstraints = () => {
+    if (!startTime) return { minEndTime: '', maxEndTime: '' };
 
-  // Live computed preview of end time (or null if startTime missing)
-  const endTimePreview = useMemo(() => {
-    if (!startTime) return null;
     const startDate = new Date(startTime);
-    if (duration) {
-      const hours = parseFloat(duration);
-      if (Number.isNaN(hours)) return null;
-      return new Date(startDate.getTime() + hours * 60 * 60 * 1000);
-    }
-    // default to 11:59 PM same day
-    const defaultEnd = new Date(startDate);
-    defaultEnd.setHours(23, 59, 0, 0);
-    return defaultEnd;
-  }, [startTime, duration]);
+    const minEndDate = new Date(startDate);
+    const maxEndDate = new Date(startDate.getTime() + 24 * 60 * 60 * 1000); // within 24 hours
 
-  // Helper to format endTimePreview nicely
-  const formatPretty = (d) => {
-    if (!d) return "";
-    return d.toLocaleString(undefined, {
-      month: "short",
-      day: "numeric",
-      hour: "numeric",
-      minute: "2-digit",
-    });
+    return {
+      minEndTime: toLocalISOString(minEndDate),
+      maxEndTime: toLocalISOString(maxEndDate),
+    };
+  };
+
+  const { minEndTime, maxEndTime } = getEndTimeConstraints();
+
+  // Snap a Date object to the nearest 30-minute interval
+  const roundTo30Minutes = (date) => {
+    const ms = 1000 * 60 * 30;
+    return new Date(Math.ceil(date.getTime() / ms) * ms);
+  };
+
+  const handleStartTimeChange = (e) => {
+    const newStart = e.target.value;
+    setStartTime(newStart);
+
+    if (newStart) {
+      const startDate = new Date(newStart);
+      const defaultEnd = new Date(startDate.getTime() + 8 * 60 * 60 * 1000); // +8 hours
+      setEndTime(toLocalISOString(roundTo30Minutes(defaultEnd)));
+    } else {
+      setEndTime('');
+    }
+  };
+
+  const handleEndTimeChange = (e) => {
+    const newEnd = e.target.value;
+    if (newEnd) {
+      const date = new Date(newEnd);
+      setEndTime(toLocalISOString(roundTo30Minutes(date)));
+    } else {
+      setEndTime('');
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
+    setError('');
+    setLoading(true);
 
     const user = auth.currentUser;
     if (!user) {
-      setError("You must be logged in to create a session.");
+      setError('You must be logged in to create a session.');
+      setLoading(false);
       return;
     }
 
-    if (!topic.trim() || !startTime) {
-      setError("Topic and Start Time are required.");
+    if (!topic || !startTime || !floor || !wing) {
+      setError('Topic, Start Time, Floor, and Wing/Side are required.');
+      setLoading(false);
       return;
     }
 
-    const startDate = new Date(startTime);
+    const startTimeDate = new Date(startTime);
+    let endTimeDate = null;
 
-    // compute endTime
-    let endDate;
-    if (duration) {
-      const hours = parseFloat(duration);
-      if (Number.isNaN(hours) || hours <= 0) {
-        setError("Invalid duration selected.");
+    // --- End Time Logic ---
+    if (endTime) {
+      endTimeDate = new Date(endTime);
+      if (endTimeDate <= startTimeDate) {
+        setError('End time must be after the start time.');
+        setLoading(false);
         return;
       }
-      endDate = new Date(startDate.getTime() + hours * 60 * 60 * 1000);
-    } else {
-      endDate = new Date(startDate);
-      endDate.setHours(23, 59, 0, 0);
-    }
 
-    // Validate start time in range
-    const minStart = new Date();
-    const maxStart = new Date();
-    maxStart.setFullYear(minStart.getFullYear() + 1);
-    if (startDate < minStart || startDate > maxStart) {
-      setError("Start time must be between now and 1 year from now.");
-      return;
+      const maxAllowedEndTime = new Date(startTimeDate.getTime() + 24 * 60 * 60 * 1000);
+      if (endTimeDate > maxAllowedEndTime) {
+        setError('End time cannot be more than 24 hours after the start time.');
+        setLoading(false);
+        return;
+      }
+    } else {
+      // Default: 11:59:59 PM same day
+      endTimeDate = new Date(startTimeDate);
+      endTimeDate.setHours(23, 59, 59, 999);
     }
+    // --- End of End Time Logic ---
 
     try {
-      await addDoc(collection(db, "sessions"), {
-        topic: topic.trim(),
-        description: description.trim(),
+      await addDoc(collection(db, 'sessions'), {
+        topic,
+        description,
         location,
-        startTime: startDate,
-        endTime: endDate,
+        floor,
+        wing,
+        startTime: startTimeDate,
+        endTime: endTimeDate,
         createdAt: new Date(),
-        status: "active",
+        status: 'active',
         hostId: user.uid,
       });
+
       onSessionCreated();
       onClose();
     } catch (err) {
-      console.error("Error creating session:", err);
-      setError("Failed to create session. Please try again.");
+      console.error("Error creating session: ", err);
+      setError('Failed to create session. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -132,86 +152,105 @@ const CreateSessionModal = ({ onClose, onSessionCreated }) => {
     <div className="modal-overlay">
       <div className="modal-content">
         <h2>Create New Study Session</h2>
-
         <form onSubmit={handleSubmit} className="session-form-detailed">
+
+          {/* Topic and Description */}
           <div className="form-group full-width">
             <label>Topic</label>
             <input
               type="text"
               value={topic}
               onChange={(e) => setTopic(e.target.value)}
-              placeholder="e.g., 'Chem 1210 Midterm Review'"
+              placeholder="e.g., 'Chem 1210 Midterm'"
               required
             />
           </div>
-
           <div className="form-group full-width">
             <label>Description</label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="What will you cover?"
-            />
-          </div>
-
-          <div className="form-group full-width">
-            <label>Location</label>
-            <select value={location} onChange={(e) => setLocation(e.target.value)}>
-              <option value="Thompson Library">Thompson Library</option>
-              <option value="18th Ave Library">18th Ave Library</option>
-              {/* add more */}
-            </select>
-          </div>
-
-          <div className="form-group half-width">
-            <label>Start Time</label>
-            <input
-              type="datetime-local"
-              value={startTime}
-              onChange={(e) => {
-                setStartTime(e.target.value);
-                // keep duration selection intact; preview will recompute via useMemo
-              }}
-              min={minStartTime}
-              max={maxStartTime}
+              placeholder="e.g., 'Going over practice problems...'"
               required
             />
           </div>
 
+          {/* Location */}
           <div className="form-group half-width">
-            <label>Duration</label>
-            {/* ALWAYS enabled so it can't be blocked by a disabled prop */}
-            <select
-              value={duration}
-              onChange={(e) => {
-                setDuration(e.target.value);
-                // quick debug in console to ensure selection registers
-                console.log("Duration selected:", e.target.value);
-              }}
-            >
-              {DURATION_OPTIONS.map((opt) => (
-                <option key={opt.value + opt.label} value={opt.value}>
-                  {opt.label}
-                </option>
-              ))}
+            <label>Building Location</label>
+            <select value={location} onChange={(e) => setLocation(e.target.value)}>
+              <option value="Thompson Library">Thompson Library</option>
+              <option value="18th Ave Library">18th Ave Library</option>
+              <option value="Ohio Union">Ohio Union</option>
+              <option value="Baker Hall">Baker Hall</option>
+              <option value="Enarson Classroom Bldg">Enarson Classroom Bldg</option>
             </select>
+          </div>
 
-            {/* Live preview (only shows when startTime selected) */}
-            {startTime && (
-              <div style={{ marginTop: 8, color: "#444", fontSize: 13 }}>
-                <strong>Ends:</strong> {endTimePreview ? formatPretty(endTimePreview) : "—"}
-              </div>
+          {/* Floor and Wing */}
+          <div className="form-group half-width">
+            <label>Floor/Room Number</label>
+            <input
+              type="text"
+              value={floor}
+              onChange={(e) => setFloor(e.target.value)}
+              placeholder="e.g., 3rd Floor"
+              required
+            />
+          </div>
+          <div className="form-group full-width">
+            <label>Wing/Side Details</label>
+            <input
+              type="text"
+              value={wing}
+              onChange={(e) => setWing(e.target.value)}
+              placeholder="e.g., Left Wing near Starbucks, Room 310"
+              required
+            />
+          </div>
+
+          {/* Start Time */}
+          <div className="form-group half-width">
+            <label>Start Time</label>
+            <input
+            type="datetime-local"
+            value={startTime}
+            onChange={handleStartTimeChange}
+            min={minStartTime}
+            max={maxStartTime}
+            step={900} // ⬅️ 15-minute intervals
+            required
+            />
+            </div>
+
+
+          {/* End Time */}
+          <div className="form-group half-width">
+            <label>End Time (Optional)</label>
+            <input
+              type="datetime-local"
+              value={endTime}
+              onChange={handleEndTimeChange}
+              min={minEndTime}
+              max={maxEndTime}
+              disabled={!startTime}
+              step={1800} // 30-minute intervals
+            />
+            {!endTime && startTime && (
+              <small className="form-help-text">
+                Defaults to 11:59 PM on the same day if left blank.
+              </small>
             )}
           </div>
 
           {error && <p className="modal-error full-width">{error}</p>}
 
           <div className="modal-actions full-width">
-            <button type="button" className="button-secondary" onClick={onClose}>
+            <button type="button" className="button-secondary" onClick={onClose} disabled={loading}>
               Cancel
             </button>
-            <button type="submit" className="create-button-full">
-              Create Session
+            <button type="submit" className="create-button-full" disabled={loading}>
+              {loading ? 'Creating...' : 'Create Session'}
             </button>
           </div>
         </form>

@@ -158,7 +158,12 @@ const HomePage = () => {
                 <div key={session.id} className="session-item-condensed">
                   <div>
                     <h3>{session.topic}</h3>
-                    <p className="session-location">{session.location}</p>
+                    <p className="session-location">
+                      {session.location} | {session.floor}
+                      </p>
+                      <p className="session-location-details">
+                        {session.wing}
+                        </p>
                     {session.startTime?.seconds && (
                       <p className="session-time-start">
                         <strong>Starts:</strong> {new Date(session.startTime.seconds * 1000).toLocaleString()}
