@@ -25,3 +25,20 @@ export const generateTimeOptions = (interval = 15) => {
   }
   return times;
 };
+
+// NEW HELPER: Finds the next valid 15-minute interval time string
+export const findNextTimeInterval = (interval = 15) => {
+  const now = new Date();
+  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+  // Find the next interval (e.g., if now is 10:17, next interval is 10:30)
+  const nextIntervalMinutes = Math.ceil((currentMinutes + 1) / interval) * interval;
+  
+  const nextTime = new Date();
+  nextTime.setHours(0, 0, 0, 0); // Start from midnight
+  nextTime.setMinutes(nextIntervalMinutes);
+  
+  return {
+    value: timeToHHMM(nextTime),
+    label: nextTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+  };
+};

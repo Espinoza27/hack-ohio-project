@@ -14,7 +14,7 @@ const UserProfileModal = ({ userId, onClose }) => {
     const fetchProfile = async () => {
       setLoading(true);
       if (!userId) {
-          setProfile(null); // Handle case where userId might be null/undefined initially
+          setProfile(null);
           setLoading(false);
           return;
       }
@@ -25,30 +25,30 @@ const UserProfileModal = ({ userId, onClose }) => {
         if (docSnap.exists()) {
           setProfile(docSnap.data());
         } else {
-          console.log("No such profile for userId:", userId);
-          setProfile(null); // Explicitly set profile to null if not found
+          setProfile(null);
         }
       } catch (error) {
           console.error("Error fetching profile:", error);
-          setProfile(null); // Handle potential errors during fetch
+          setProfile(null);
       } finally {
           setLoading(false);
       }
     };
 
     fetchProfile();
-  }, [userId]); // Dependency array includes userId
+  }, [userId]);
 
   return (
     <div className="modal-overlay" onClick={onClose}>
+      {/* Added class to distinguish the profile modal for specific styling */}
       <div className="modal-content user-profile-modal" onClick={(e) => e.stopPropagation()}>
-        {loading && <h2 className="loading-text">Loading...</h2>}
+        {loading && <h2 className="loading-text">Loading Profile...</h2>}
 
         {!loading && !profile && <h2 className="error-text">Profile not found.</h2>}
 
         {!loading && profile && (
           <>
-            {/* --- Profile Picture --- */}
+            {/* --- Profile Picture (Aesthetic: Centered, Large) --- */}
             <img
               src={profile.photoURL || defaultPic}
               alt={profile.displayName}
@@ -56,17 +56,19 @@ const UserProfileModal = ({ userId, onClose }) => {
             />
 
             <h2>{profile.displayName}</h2>
-
-            <div className="profile-details">
-              {/* --- Simpler structure for Major --- */}
+            
+            {/* --- Details Section --- */}
+            <div className="profile-details-grid">
+              
+              {/* Major */}
               <div className="profile-detail-item">
-                <strong>Major:</strong>
+                <strong>Major</strong>
                 <span>{profile.major || 'Not specified'}</span>
               </div>
-
-              {/* --- Courses Section --- */}
-              <div className="profile-detail-item">
-                <strong>Courses:</strong>
+              
+              {/* Courses */}
+              <div className="profile-detail-item full-row">
+                <strong>Courses</strong>
                 {profile.courses && profile.courses.length > 0 ? (
                   <ul className="profile-courses-list">
                     {profile.courses.map((course, index) => (
@@ -79,7 +81,7 @@ const UserProfileModal = ({ userId, onClose }) => {
               </div>
             </div>
 
-            <div className="modal-actions">
+            <div className="modal-actions full-row">
               <button type="button" className="button-secondary" onClick={onClose}>
                 Close
               </button>

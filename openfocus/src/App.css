@@ -967,3 +967,70 @@ input {
   color: #aaa;
   font-size: 0.85rem;
 }
+/* --- USER PROFILE MODAL STYLES (Aesthetic/Modern) --- */
+
+/* Ensures the user profile modal is slightly narrower and centered */
+.user-profile-modal {
+  /* Overrides max-width from 650px to a smaller aesthetic size */
+  max-width: 450px !important; 
+  text-align: center;
+  padding: 30px 40px; /* More padding on the sides */
+}
+
+.profile-modal-pic {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 4px solid #646cff; /* Highlighted border color */
+  margin-bottom: 20px;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.user-profile-modal h2 {
+  font-size: 1.8rem;
+  margin-bottom: 20px;
+  color: #fff;
+  border-bottom: 1px solid #444;
+  padding-bottom: 15px;
+}
+
+/* New Grid for Details (used inside the modal) */
+.profile-details-grid {
+  display: grid;
+  grid-template-columns: 1fr; /* Default to single column */
+  gap: 20px;
+  text-align: left;
+  margin-bottom: 25px;
+}
+
+.profile-detail-item {
+  display: flex;
+  flex-direction: column; 
+  background-color: #333333; /* Darker background for the info box */
+  padding: 15px;
+  border-radius: 8px;
+  border: 1px solid #444;
+}
+
+.profile-detail-item strong {
+  color: #646cff; /* Use primary color for labels */
+  font-weight: 700;
+  font-size: 0.9rem;
+  margin-bottom: 5px;
+  text-transform: uppercase;
+}
+
+.profile-detail-item span,
+.profile-courses-list li {
+  color: #fff;
+  font-size: 1rem;
+}
+
+.profile-courses-list {
+  margin: 5px 0 0 0;
+  padding-left: 20px;
+  list-style: disc; 
+}
